@@ -1,0 +1,106 @@
+body,body *{
+    margin: 0;
+    padding: 0;
+    font-family: "Noto Serif SC", "Noto Serif SC Fallback";
+    letter-spacing: 1px;
+}
+:root{
+    /* ===== 你的原始颜色（完全保留，一个 lab 值都不改） ===== */
+    --color-ziti:lab(7.78673% 1.82345 -15.0537);
+    --color-bule:lab(38.4009% 52.6132 -92.3857);
+    --color2-bule:lab(60% 30 -60);
+    --color-font:lab(26.9569% -1.47016 -15.6993);
+    --color2-font:lab(49.5493% 79.8381 2.31768);
+    --color-control:lab(48.295% 38.3129 -81.9673);
+    
+    /* ===== 新增变量（只提取你 index.css 里的硬编码值） ===== */
+    --bg-white-06: rgba(255, 255, 255, 0.6);
+    --bg-white-05: rgba(255, 255, 255, 0.5);
+    --bg-white-04: rgba(255, 255, 255, 0.4);
+    --bg-dark-purple: #2a2845;
+    --text-white: #ffffff;
+    --text-black-08: rgba(0, 0, 0, 0.8);
+    --border-purple: #c4b5fd;
+    --shadow-light: 0 2px 12px rgba(0, 0, 0, 0.08);
+    --shadow-medium: 0 4px 20px rgba(0, 0, 0, 0.06);
+    --shadow-heavy: 0 20px 60px rgba(0, 0, 0, 0.12);
+    --shadow-card: 0 20px 60px rgba(0, 0, 0, 0.5);
+    --shadow-media: 0 4px 16px rgba(0, 0, 0, 0.08);
+    --gradient-dark: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+    --gradient-text: linear-gradient(135deg, #4facfe, #00f2fe, #f093fb);
+    --bg-progress: rgba(0, 0, 0, 0.1);
+    --glow-blue: 0 0 10px rgba(100, 200, 255, 0.4), 0 0 40px rgba(100, 200, 255, 0.2), 0 0 80px rgba(100, 200, 255, 0.1);
+}
+/* ===== 深色模式 ===== */
+[data-theme="dark"] {
+  /* 文字：浅色变白，深色变浅灰 */
+  --color-ziti: #f0f0f0;
+  --color-font: #b0b0b0;
+  --color2-font: #c084fc;
+  --text-white: #ffffff;
+  --text-black-08: rgba(255, 255, 255, 0.85);
+  
+  /* 背景：白色半透明变深色半透明 */
+  --bg-white-06: rgba(20, 20, 40, 0.85);
+  --bg-white-05: rgba(15, 15, 35, 0.8);
+  --bg-white-04: rgba(10, 10, 30, 0.7);
+  --bg-dark-purple: #1a1838;
+  --bg-progress: rgba(255, 255, 255, 0.12);
+  
+  /* 边框：浅紫变深紫 */
+  --border-purple: #5a4a7a;
+  
+  /* 阴影：加深 */
+  --shadow-light: 0 2px 12px rgba(0, 0, 0, 0.5);
+  --shadow-medium: 0 4px 20px rgba(0, 0, 0, 0.6);
+  --shadow-heavy: 0 20px 60px rgba(0, 0, 0, 0.7);
+  --shadow-card: 0 20px 60px rgba(0, 0, 0, 0.8);
+  --shadow-media: 0 4px 16px rgba(0, 0, 0, 0.5);
+  
+  /* 渐变遮罩：更深的黑色 */
+  --gradient-dark: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+}
+body *{
+    box-sizing: border-box;
+    margin: 0%;
+    padding: 0%;
+}
+a{
+    text-decoration: none;
+    color: black;
+}
+input,
+button,
+textarea{
+    color: inherit;
+    font: inherit;
+    border: none;
+}
+a:focus,
+input:focus,
+button:focus,
+textarea:focus{
+    outline: none;
+}
+ol,ul,li{
+    list-style: none;
+}
+h1,h2,h3,h4,h5,h6,p,ul,ol{
+    margin: 0;
+    padding: 0;
+}
+@font-face {
+  font-family: 'iconfont';
+  src: url('iconfont.woff2?t=1783863272706') format('woff2'),
+       url('iconfont.woff?t=1783863272706') format('woff'),
+       url('iconfont.ttf?t=1783863272706') format('truetype');
+}
+.iconfont {
+  font-family: "iconfont" !important;
+  font-size: 23px;
+  font-weight: 600;
+  color: darkgray;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
