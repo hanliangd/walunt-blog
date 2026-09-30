@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+  <style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+body {
+    display: flex;
+    min-height: 100vh;
+    background: radial-gradient(circle at 30% 0%, #ffffff 10%, #f0f4f8 25%, #d8e2f0 60%, #c0d0f0 100%);
+}
+/* 背景视频 */
+.video-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: -1;
+}
+/* 外层卡片 */
+.login-card {
+    display: flex;
+    overflow: hidden;
+    width: 840px;
+    height: 480px;
+    align-self: center;
+    margin: auto 0 auto 4%;
+    border-radius: 10px;
+    box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+    background-color: #ffffff;
+}
+/* 左侧插图 */
+.login-illust {
+    width: 320px;
+    height: 480px;
+}
+.illust-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+/* 右侧表单区 */
+.login-form {
+    width: 520px;
+    height: 480px;
+    text-align: center;
+    background-color: #ffffff;
+}
+.login-title {
+    color: #667eea;
+    font: 700 30px sans-serif;
+    margin: 30px;
+}
+/* 输入框（合并了原来的 input1 和 input2） */
+.login-input {
+    width: 360px;
+    height: 40px;
+    border: none;
+    border-bottom: 1px solid #c0d0f0;
+    background-color: #ffffff;
+    margin: 20px;
+    padding-left: 10px;
+}
+.login-input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+/* 错误提示 */
+.error-msg {
+    color: red;
+    font-size: 14px;
+    height: 20px;
+    margin-top: 10px;
+}
+/* 登录按钮 */
+.login-btn {
+    width: 200px;
+    height: 40px;
+    margin: 30px;
+    background-color: #667eea;
+    border: none;
+    color: #ffffff;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+.login-btn:hover {
+    transform: scale(1.02);
+}
+/* 底部链接 */
+.link-box {
+    display: flex;
+    justify-content: space-between;
+    width: 80%;
+    margin: 30px auto 0;
+}
+.link {
+    color: #667eea;
+    text-decoration: none;
+    font-size: 14px;
+}
+.link:hover {
+    color: aqua;
+}
+</style>
+</head>
+<body>
+    <video class="video-bg" autoplay loop muted playsinline>
+        <source src="./img/【哲风壁纸】伊蕾娜-傍晚.mp4" type="video/mp4">
+    </video>
+    <!-- 外层卡片容器 -->
+    <div class="login-card">
+        <!-- 左侧插图区 -->
+        <div class="login-illust">
+            <img src="./img/pixiv_works_133187084_p0.png" alt="伊雷娜好可爱" class="illust-img">
+        </div>
+
+        <!-- 右侧表单区 -->
+        <div class="login-form">
+            <div class="login-title">登录</div>
+            
+            <!-- 1. 表单包裹，加上 id -->
+            <form id="loginForm">
+                <!-- 2. 输入框加上 id -->
+                <input type="text" placeholder="用户名" class="login-input" id="username">
+                <input type="password" placeholder="密码" class="login-input" id="password">
+                
+                <!-- 3. 错误信息显示区 -->
+                <div id="errorMsg" class="error-msg"></div>
+                
+                <div>
+                    <button type="submit" class="login-btn">Login</button>
+                </div>
+            </form>
+
+            <div class="link-box">
+                <a href="#" class="link">注册账号</a>
+                <a href="#" class="link">找回密码</a>
+            </div>
+        </div>
+    </div>
+    <script>
+      const form = document.querySelector('#loginForm');
+      const errorMsg = document.querySelector('#errorMsg');
+      async function login(e) {
+        e.preventDefault(); // 阻止表单默认刷新
+        errorMsg.textContent = ""; // 清空之前的错误提示
+        const username = document.querySelector('#username').value;
+        const password = document.querySelector('#password').value;
+        try{
+          const res = await fetch('/api/login',{
+           method: 'POST',
+           headers: { 'Content-Type': 'application/json' },
+           body: JSON.stringify({ username , password })
+          })
+          if (!res.ok){
+           const errorData = await res.json()
+           errorMsg.textContent = errorData.detail || "用户名或密码错误";
+           return;
+          }
+          window.location.href = '/static/index.html' 
+        }catch(error){
+           errorMsg.textContent = "网络连接失败，请稍后重试";
+           console.error(error);
+       }
+      }
+      form.addEventListener('submit',login)
+    </script>
+</body>
+</html>
