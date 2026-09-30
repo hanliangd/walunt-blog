@@ -43,6 +43,12 @@ class Post_Tag(Base):
   __tablename__='post_tags'
   post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"), primary_key=True)
   tag_id:  Mapped[int] = mapped_column(ForeignKey("tags.id"),  primary_key=True)
+class SessionToken(Base):
+  __tablename__='sessions'
+  token:Mapped[str] = mapped_column(primary_key=True)
+  user_id:Mapped[int] = mapped_column(ForeignKey("users.id"))
+  created_at:Mapped[str] = mapped_column(server_default=func.current_timestamp())
+  expires_at:Mapped[str]
 DB_PATH = BASE_DIR / "blog.db"
 engine = create_engine(f"sqlite:///{DB_PATH.as_posix()}")
 @event.listens_for(engine, "connect")

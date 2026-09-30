@@ -1,12 +1,18 @@
-from fastapi import FastAPI , HTTPException
+from fastapi import FastAPI , HTTPException , Response , Depends
 from pydantic import BaseModel , Field ,ConfigDict
 from fastapi.staticfiles import StaticFiles
 import httpx
 import os
 from dotenv import load_dotenv
 from pathlib import Path
-from models import SessionLocal, User,Post
-from sqlalchemy import select
+from models import SessionLocal, User,Post,SessionToken
+from sqlalchemy import select 
+from security import hash_password
+from security import verify_password
+from sqlalchemy.exc import IntegrityError
+import secrets
+from datetime import datetime, timedelta
+from dependencies import get_current_user 
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH  = BASE_DIR / "blog.db"
 static_dir = Path(__file__).resolve().parent / "static"
@@ -58,6 +64,12 @@ class PostOut(BaseModel):
 class PostCreat(BaseModel):
     title:str = Field(min_length=1, max_length=100)
     content: str | None
+class UserRegister(BaseModel):
+    username: str = Field(min_length=3, max_length=20)  
+    password: str = Field(min_length=6)
+class UserLogin(BaseModel):
+    username: str
+    password: str
 @app.get("/")
 def read_root():
     return {"message": "Hello FastAPI"}
@@ -154,10 +166,69 @@ def get_user_posts(user_id:int):
         else: 
           return[p.title for p in user.posts]
 @app.post("/api/post", status_code=201)
-def creat_post(data:PostCreat):
+def create_post(data:PostCreat , current_user: User = Depends(get_current_user)):
     with SessionLocal() as session:
-        post = Post(title=data.title,content=data.content,users_id=1)
+        post = Post(title=data.title , content=data.content , users_id = current_user.id)
         session.add(post)
         session.commit()
         session.refresh(post)
         return{"id": post.id, "title": post.title}
+@app.delete("/api/post/{post_id}")
+def delect_post(post_id:int , current_user: User = Depends(get_current_user)):
+    with SessionLocal() as session:
+        post = session.scalars(select(Post).where(Post.id == post_id , Post.users_id == current_user.id)).first()
+        if not post:
+            raise HTTPException(404, "文章不存在")
+        session.delete(post)
+        session.commit()
+        return{"删除成功"}
+@app.post("/api/register",status_code=201)
+def register(data:UserRegister):
+    with SessionLocal() as session:
+        existing_user = session.scalars(
+            select(User).where(User.username == data.username)
+        ).first()
+        if existing_user:
+            raise HTTPException(status_code=409, detail="用户名已被注册")
+        else:
+            hashed_pwd = hash_password(data.password)
+            new_user = User(
+                username=data.username,
+                password_hash=hashed_pwd
+            )
+            try:
+                session.add(new_user)
+                session.commit()
+                session.refresh(new_user)
+                return {"message": "注册成功", "user_id": new_user.id}
+            except IntegrityError:
+                session.rollback()
+                raise HTTPException(status_code=409, detail="注册失败，用户名冲突")
+@app.post("/api/login")
+def login(data: UserLogin, response: Response):
+    with SessionLocal() as session:
+        user=session.scalars(select(User).where(User.username == data.username)).first()
+        if not user or not verify_password(data.password, user.password_hash):
+            raise HTTPException(status_code=401, detail="用户名或密码错误")
+        token = secrets.token_urlsafe(32)
+        expires_at = (datetime.now() + timedelta(days=7)).isoformat()
+        new_session = SessionToken(
+            token = token,
+            user_id = user.id,
+            expires_at=expires_at
+        )
+        session.add(new_session)
+        session.commit()
+        response.set_cookie(
+            key="session_token",
+            value=token,
+            httponly=True,
+            samesite='lax',
+            max_age=7 * 24 * 3600 
+        )
+        return {"message": "登录成功", "username": user.username}
+@app.get("/api/me", response_model=UserOut)
+def get_me(current_user: User = Depends(get_current_user)):
+    return current_user         
+
+    
