@@ -24,8 +24,8 @@ header .head{
     width: 100%;
     position: fixed;
     top: 0;
-    padding-left: 300px;
-    padding-right: 300px;
+    padding-left: max(12px, calc((100% - 1080px) / 2));
+    padding-right: max(12px, calc((100% - 1080px) / 2));
     height: 65px;
     display: flex;
     justify-content: space-between;
@@ -45,16 +45,19 @@ header .head a{
     text-align: center;
     line-height: 65px;
     color: var(--color-ziti);
+    white-space: nowrap; 
     
 }
 header .head a span{
     color: var(--color-bule);
 }
 header .nav {
-    width: 580px;
-    height: 65px;
+    width: auto;
+    flex: 1;
+    height: auto;
     text-align: center;
     line-height: 65px;
+    min-width: 0;
 }
 header .nav a{
     width: 28px;
@@ -62,7 +65,8 @@ header .nav a{
     color: var(--color-ziti);
     font-size: 14px;
     font-weight: 700;
-    margin-left: 23px;
+    margin-left: clamp(4px, 1.4vw, 23px);
+    white-space: nowrap;
 }
 header .nav a:nth-child(1){
     color: var(--color-bule);
@@ -73,18 +77,23 @@ header .nav a:nth-child(1){
 .nav .nav1:hover {
     color: var(--color-bule);
 }
+/* ③ 四个 1080 → 最多 1080 */
+header nav, header .box, header .subject, header .picture{
+    width: 100%; 
+    max-width: 1080px;
+}
 header nav{
     display: flex;
     position: relative;
     margin-top: 65px;
     top: 50px;
-    width: 1080px;
     justify-content: center;
     align-items: center;
 }
     
 header nav input{
-    width: 672px;
+    width: 100%; 
+    max-width: 672px;
     height: 61.33px;
     background-color: var(--bg-white-06);
     border-radius: 24px;
@@ -104,15 +113,17 @@ header nav input:focus+.iconfont{
   color: var(--color-bule);
 }
 header .box{
-    width: 1080px;
-    height: 280px;
     display: flex;
     margin-top: 90px;
     justify-content: space-between;
+    flex-wrap: wrap; 
+    gap: 20px; 
+    height: auto;
 }
 header .box .content1{
-    width: 640px;
-    height: 100%;
+    flex: 1 1 640px;
+    min-width: 0; 
+    height: auto;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -129,8 +140,9 @@ header .box .content1{
     will-change: transform;
 }
 header .box .content2{
-    width: 410px;
-    height: 100%;
+    flex: 1 1 400px;
+    min-width: 0; 
+    height: auto; 
     background-color: var(--bg-white-05);
     border-radius: 24px;
     padding: 32px;
@@ -150,7 +162,7 @@ header .box .content2:hover{
     box-shadow: var(--shadow-heavy);
 }
 header .box .content1 .column1{
-    width: 576px;
+    width: 100%;
     height: 108px;
     display: flex;
     gap: 30px;
@@ -179,7 +191,8 @@ header .box .content1 .column1 .img:hover{
     transform: rotate(5deg);
 }
 header .box .content1 .column1 .profile{
-    width: 430px;
+    flex: 1; 
+    min-width: 0;
     height: 108px;
 } 
 header .box .content1 .column1 .profile h2{
@@ -191,7 +204,7 @@ header .box .content1 .column1 .profile P{
     color: var(--color-font);
 }
 header .box .content1 .column2{
-    width: 576px;
+    width: 100%;
     height: 50px;
     display: flex;
     justify-content: space-between;
@@ -273,7 +286,7 @@ header .box .content1 .column2 .login a:hover span{
     color: var(--text-white);
 }
 header .box .content2 .song{
-  width: 346px;
+  width: 100%;
   height: 85.15px;
   display: flex;
   gap: 18px;
@@ -287,7 +300,8 @@ header .box .content2 .song img{
 }
 header .box .content2 .song .media-name{
     display: flex;
-    width: 289px;
+    flex: 1; 
+    min-width: 0;
     height: 100%; 
     flex-direction: column;
     gap: 2px;
@@ -321,7 +335,7 @@ header .box .content2  p{
      margin-left: 0px;
 }
 header .box .content2 .timeline{
-    width: 376px;
+    width: 100%;
     height: 16px;
     display: flex;
     gap: 12px;
@@ -333,7 +347,7 @@ header .box .content2 .timeline span{
     font-weight: 700;
 }
 header .box .content2 .timeline div{
-    width: 250px;
+    flex: 1;
     height: 6px;
     position: relative;
     background-color: var(--bg-progress);
@@ -352,7 +366,7 @@ header .box .content2 .timeline div span{
 }
 header .box .content2 .control{
     display: flex;
-    width: 340px;
+    width: 100%;
     height: 90px;
     gap: 23px;
     justify-content: center;
@@ -395,7 +409,6 @@ header .box .content2:hover .song img{
     animation: rotate 8s infinite linear;
 }
 header .subject{
-    width: 1080px;
     height: 80px;
     background-color: var(--bg-dark-purple);
     border-radius: 24px;
@@ -436,32 +449,33 @@ header .subject span:nth-child(6){
     animation: appear 6s 1.5s infinite ease-in-out;
 }
 header .picture{
-    width: 1080px;
     height: 600px;
     display: grid;
     margin-top: 20px;
     gap: 23px;
-    grid-template-columns: repeat(5,198px);
-    grid-template-rows: repeat(2,290px);
+    grid-template-columns: repeat(auto-fit , minmax(190px , 1fr));
     transform: translateZ(0);
     will-change: transform, opacity;
 }  
-header .picture li:first-child{
-    grid-column: 1/3;
-    grid-row: 1/3;
-    
+/* 第一个格子：跨两列，跨两行 */
+header .picture li:first-child {
+    grid-column: span 2; 
+    grid-row: span 2;
 }
-header .picture li:nth-child(2){
-    grid-column:3/6 ;
-    grid-row: 1/2;
+/* 第二个格子：跨三列（因为第一行剩余了 3 列空间） */
+header .picture li:nth-child(2) {
+    grid-column: span 3;
+    grid-row: span 1;
 }
-header .picture li:nth-child(3){
-    grid-column: 3/5;
-    grid-row: 2/3;
+/* 第三个格子：跨两列 */
+header .picture li:nth-child(3) {
+    grid-column: span 2;
+    grid-row: span 1;
 }
-header .picture li:nth-child(4){
-    grid-column: 5/6;
-    grid-row: 2/3;
+/* 第四个格子（就是你的夜间模式按钮）：占据剩下的 1 列 */
+header .picture li:nth-child(4) {
+    grid-column: span 1;
+    grid-row: span 1;
 }
 header .picture li div{
     width: 100%;
@@ -572,4 +586,147 @@ header .picture li:nth-child(3) div img:nth-child(3){
     0%, 26%   { opacity: 1; }   
     33%       { opacity: 0; }   
     100%      { opacity: 0; }           
+}
+@media(max-width: 768px) {
+    body{
+      overflow-x: visible;  
+    }
+     /* 2. 强制让所有 1080px 的容器宽度，变成 100% 自适应 */
+    header .head, 
+    header nav, 
+    header .box, 
+    header .subject, 
+    header .picture {
+        width: 100%;
+        padding-left: 15px;   /* 给两边留一点安全距离 */
+        padding-right: 15px;
+        box-sizing: border-box;
+    }
+    header .head {
+        padding-left: 12px;   /* 把 300px 改成 15px */
+        padding-right: 12px;
+    }
+    header .head a {
+        width: 50%;          /* 去掉原来写死的 250px 宽度 */
+        font-size: 10px;      /* 字号稍微调小一点 */
+    }
+    header .box{
+        width: 100%;
+        height: auto;
+        display: flex;
+        flex-direction: column;
+        margin-top: 30px;
+        gap: 15px;         
+
+    }
+    header nav{
+        display: flex;
+        position: relative;
+        margin-top: 15px;
+        top: 0px;
+        justify-content: center;
+        align-items: center;
+    }
+    header nav input {
+        width: 100%;
+        height: auto;            /* 搜索框自适应 */
+        padding-left: 40px;      /* 调整左边距 */
+        padding-right: 15px;
+        box-sizing: border-box;
+    }
+    header nav span{
+        position: absolute;
+        left: 14px;
+        font-size: 16px;          /* 把现在那条 font-size:2px 删掉，那是白写的 */
+    }
+    header .nav {
+        width: 100%;
+        height: auto;
+        line-height: 40px; /* 减小行高 */
+        display: flex;
+        flex-wrap: nowrap; /* 强制不换行 */
+        justify-content: flex-end; /* 靠左对齐 */
+        overflow-x: auto; /* 如果放不下，允许内部横向滚动 */     
+    }
+    header .nav a {
+        margin-left: 2px; /* 把电脑端的 23px 缩小 */
+        font-size: 8px;  /* 把字号从 14px 缩小 */
+        white-space: nowrap; /* 文字本身不换行 */
+    }
+    header .box .content1,
+    header .box .content2 {
+        width: 100%; 
+        flex: 0 0 auto;         /* 强制从 640px / 410px 变成全宽 */
+        height: auto;         
+        padding: 15px;
+        font-size: 12px;        
+        box-sizing: border-box; 
+    }
+    header .box .content1 .column1,
+    header .box .content1 .column2 {
+        width: 100%;
+        height: auto;            
+    }
+    header .box .content1 .column1{ 
+        gap: 12px; 
+        align-items: center; 
+    }
+    header .box .content1 .column1 .img{
+        width: 56px; 
+        height: 56px; 
+        flex: 0 0 56px;   /* 盖掉 20%，别用百分比 */
+    }
+    header .box .content1 .column1 .img img{ 
+        width: 100%; 
+        height: 100%; 
+    }  /* ← 关键，现在漏了 */
+    header .box .content1 .column1 .profile{ 
+        width: auto; 
+        flex: 1; 
+        min-width: 0; 
+    }
+    header .box .content1 .column1 .profile h2{ 
+        font-size: 22px; 
+    }
+    header .box .content1 .column2 .count a:first-child span:first-child{ 
+        font-size: 18px; 
+    }
+    header .head{ 
+        position: static; 
+    }   /* 手机上不要固定头，65px 的账就不用算了 */
+    header .box .content1 .column2{
+        flex-wrap: wrap;          /* 允许换行，531 就有地方去 */
+        height: auto;
+        gap: 10px;
+    }
+    header .box .content1 .column2 .count{ 
+        width: 100%; 
+    }   /* 计数：独占一行 */
+    header .box .content1 .column2 .login{
+        width: 100%;              /* 图标：独占一行 */
+        gap: 8px;
+        margin-top: 0;
+    }
+    header .box .content1 .column2 .login a{ 
+        width: auto; 
+        flex: 1; 
+    }  /* 6 个图标均分 315 */
+    header .box .content2 .timeline{
+        width: 100%;
+    }
+    /* 1. 网格改为单列 */
+    header .picture{    
+        height: auto;
+    }
+    /* 2. 取消手机端所有特殊的跨列规则 */
+    header .picture li:first-child,
+    header .picture li:nth-child(2),
+    header .picture li:nth-child(3),
+    header .picture li:nth-child(4) {
+        grid-column: auto; 
+        grid-row: auto;     
+    }
+    header .picture li div {
+        height: 200px; 
+    }
 }
