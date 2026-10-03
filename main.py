@@ -12,7 +12,9 @@ from security import verify_password
 from sqlalchemy.exc import IntegrityError
 import secrets
 from datetime import datetime, timedelta
-from dependencies import get_current_user 
+from dependencies import get_current_user
+from fastapi.responses import StreamingResponse
+import json      
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH  = BASE_DIR / "blog.db"
 static_dir = Path(__file__).resolve().parent / "static"
@@ -142,8 +144,8 @@ async def chat(data:chatRequest):
         print(f"[Deepseek error]{response.status_code}{response.text}")
         raise HTTPException(502,"模型服务暂时不可用")
     try:
-      result = response.json()
-      reply = result["choices"][0]["message"]["content"]
+       result = response.json()
+       reply = result["choices"][0]["message"]["content"]
     except (KeyError, IndexError, ValueError):
         print(f"[DeepSeek error] 返回结构异常：{response.text}")
         raise HTTPException(502, "模型返回数据异常")
@@ -230,5 +232,48 @@ def login(data: UserLogin, response: Response):
 @app.get("/api/me", response_model=UserOut)
 def get_me(current_user: User = Depends(get_current_user)):
     return current_user         
+@app.post("/api/chat/stream")
+async def chat_stream(data: chatRequest):
+    if not Mykey:
+        raise HTTPException(500, "服务配置错误")
+    async def gen():
+        async with httpx.AsyncClient(timeout=httpx.Timeout(30.0, read=None)) as client:
+            async with client.stream("POST","https://api.deepseek.com/chat/completions",
+                                     headers={"Authorization": f"Bearer {Mykey}"},
+                                     json={
+                                         "model":"deepseek-chat",
+                                         "messages":[
+                                            {"role": "user", "content": data.message}
+                                         ],
+                                         "stream": True, 
+                                         "max_tokens": 1024
+                                     } ) as r:
+                if r.status_code!=200:
+                    yield f"data: {json.dumps({'error': '模型服务暂时不可用'})}\n\n"
+                    yield "data:[DONE]\n\n"
+                    return
+                async for line in r.aiter_lines():
+                    if not line:
+                        continue
+                    if "[DONE]" in line:
+                        yield "data: [DONE]\n\n"
+                        break
+                    if line.startswith("data:"):
+                        json_str = line.removeprefix("data: ")
+                        try:
+                           chunk = json.loads(json_str)
+                           content = chunk["choices"][0]["delta"]["content"]
+                           yield f"data: {json.dumps({'content': content})}\n\n"
+                        except(json.JSONDecodeError, KeyError, IndexError):
+                           continue
+    return StreamingResponse(gen(), media_type="text/event-stream")
+
+
+
+            
+
+        
+
+
 
     
