@@ -121,7 +121,7 @@ header .box{
     height: auto;
 }
 header .box .content1{
-    flex: 1 1 640px;
+    flex: 1 1 620px;
     min-width: 0; 
     height: auto;
     display: flex;
@@ -140,7 +140,7 @@ header .box .content1{
     will-change: transform;
 }
 header .box .content2{
-    flex: 1 1 400px;
+    flex: 1 1 380px;
     min-width: 0; 
     height: auto; 
     background-color: var(--bg-white-05);
@@ -453,7 +453,7 @@ header .picture{
     display: grid;
     margin-top: 20px;
     gap: 23px;
-    grid-template-columns: repeat(auto-fit , minmax(190px , 1fr));
+    grid-template-columns: repeat(5, 1fr);/* 基准层：拼图是按 5 列设计的 */
     transform: translateZ(0);
     will-change: transform, opacity;
 }  
@@ -726,7 +726,25 @@ header .picture li:nth-child(3) div img:nth-child(3){
         grid-column: auto; 
         grid-row: auto;     
     }
+    header .picture{ 
+        grid-template-columns: repeat(2, 1fr); 
+    }
     header .picture li div {
         height: 200px; 
     }
+}
+/* ≤480：这才是这个页面真正需要的"第二个断点" */
+@media (max-width: 480px){
+  header .picture{ 
+    grid-template-columns: 1fr; 
+}
+  header .picture li:nth-child(4) div button .bg-toggle{
+      width: 72px; height: 72px; line-height: 72px; top: 10px; right: 10px;
+  }
+  header .picture li:nth-child(4) div button .bg-toggle .iconfont{ 
+    font-size: 30px; 
+}
+  header .picture li:nth-child(4) div button p{ 
+    width: auto; font-size: 13px; bottom: 12px; right: 12px; 
+}
 }
