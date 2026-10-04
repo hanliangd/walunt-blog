@@ -237,35 +237,44 @@ async def chat_stream(data: chatRequest):
     if not Mykey:
         raise HTTPException(500, "服务配置错误")
     async def gen():
-        async with httpx.AsyncClient(timeout=httpx.Timeout(30.0, read=None)) as client:
-            async with client.stream("POST","https://api.deepseek.com/chat/completions",
-                                     headers={"Authorization": f"Bearer {Mykey}"},
-                                     json={
-                                         "model":"deepseek-chat",
-                                         "messages":[
-                                            {"role": "user", "content": data.message}
-                                         ],
-                                         "stream": True, 
-                                         "max_tokens": 1024
-                                     } ) as r:
-                if r.status_code!=200:
-                    yield f"data: {json.dumps({'error': '模型服务暂时不可用'})}\n\n"
-                    yield "data:[DONE]\n\n"
-                    return
-                async for line in r.aiter_lines():
-                    if not line:
-                        continue
-                    if "[DONE]" in line:
+        try:
+            async with httpx.AsyncClient(timeout=httpx.Timeout(30.0, read=None)) as client:
+                async with client.stream("POST","https://api.deepseek.com/chat/completions",
+                                        headers={"Authorization": f"Bearer {Mykey}"},
+                                        json={
+                                            "model":"deepseek-chat",
+                                            "messages":[
+                                                {"role": "user", "content": data.message}
+                                            ],
+                                            "stream": True, 
+                                            "max_tokens": 1024
+                                        } ) as r:
+                    if r.status_code != 200:
+                        yield f"data: {json.dumps({'error': '模型服务暂时不可用'})}\n\n"
                         yield "data: [DONE]\n\n"
-                        break
-                    if line.startswith("data:"):
-                        json_str = line.removeprefix("data: ")
-                        try:
-                           chunk = json.loads(json_str)
-                           content = chunk["choices"][0]["delta"]["content"]
-                           yield f"data: {json.dumps({'content': content})}\n\n"
-                        except(json.JSONDecodeError, KeyError, IndexError):
-                           continue
+                        return
+                    async for line in r.aiter_lines():
+                        if not line:
+                            continue
+                        if "[DONE]" in line:
+                            yield "data: [DONE]\n\n"
+                            break
+                        if line.startswith("data:"):
+                            json_str = line.removeprefix("data: ").strip()
+                            try:
+                                chunk = json.loads(json_str)
+                                content = chunk["choices"][0]["delta"]["content"]
+                                yield f"data: {json.dumps({'content': content} , ensure_ascii=False)}\n\n"
+                            except(json.JSONDecodeError, KeyError, IndexError):
+                                print(f"[解析失败] {json_str}")
+                                continue
+        except httpx.TimeoutException:
+            yield f"data: {json.dumps({'error': '模型服务响应超时'})}\n\n"
+            yield "data: [DONE]\n\n"
+        except httpx.RequestError as e:
+            print(f"[DeepSeek error] 网络错误：{e}")
+            yield f"data: {json.dumps({'error': '无法连接模型服务'})}\n\n"
+            yield "data: [DONE]\n\n"
     return StreamingResponse(gen(), media_type="text/event-stream")
 
 
