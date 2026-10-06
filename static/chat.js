@@ -27,6 +27,7 @@ async function streamChat(message,{onChunk=()=>{}, onError=(e)=>console.log(e)
     return
   }
   const reader = res.body.getReader()
+  let sawDone = false
   const parse = createParser((payload)=>{
     if (payload === '[DONE]'){
       sawDone = true
