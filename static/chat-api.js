@@ -49,7 +49,8 @@ async function streamChat(message,{onChunk=()=>{}, onError=(e)=>console.log(e)
     parse(text)
   }
   if (!sawDone) {
-    onError("连接提前中断（没收到 [DONE])")
+    onError("连接提前中断，没收到 [DONE]")
 }
 }
-window.streamChat = streamChat
+// 导出给其他文件用（模块化写法）
+export { streamChat };

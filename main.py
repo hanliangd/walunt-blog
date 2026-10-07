@@ -115,7 +115,7 @@ def get_homepage():
         ] 
     }
 @app.post("/chat",response_model=ChatResponse)
-async def chat(data:chatRequest):
+async def chat(data:chatRequest, current_user:User = Depends(get_current_user)):
     if not Mykey:
         raise HTTPException(500 ,"服务配置错误")
     try:
@@ -176,14 +176,14 @@ def create_post(data:PostCreat , current_user: User = Depends(get_current_user))
         session.refresh(post)
         return{"id": post.id, "title": post.title}
 @app.delete("/api/post/{post_id}")
-def delect_post(post_id:int , current_user: User = Depends(get_current_user)):
+def delete_post(post_id:int , current_user: User = Depends(get_current_user)):
     with SessionLocal() as session:
         post = session.scalars(select(Post).where(Post.id == post_id , Post.users_id == current_user.id)).first()
         if not post:
             raise HTTPException(404, "文章不存在")
         session.delete(post)
         session.commit()
-        return{"删除成功"}
+        return{'message':'删除成功'}
 @app.post("/api/register",status_code=201)
 def register(data:UserRegister):
     with SessionLocal() as session:
@@ -233,12 +233,12 @@ def login(data: UserLogin, response: Response):
 def get_me(current_user: User = Depends(get_current_user)):
     return current_user         
 @app.post("/api/chat/stream")
-async def chat_stream(data: chatRequest):
+async def chat_stream(data: chatRequest ,current_user: User = Depends(get_current_user)):
     if not Mykey:
         raise HTTPException(500, "服务配置错误")
     async def gen():
         try:
-            async with httpx.AsyncClient(timeout=httpx.Timeout(30.0, read=None)) as client:
+            async with httpx.AsyncClient(timeout=httpx.Timeout(30.0, read=60.0)) as client:
                 async with client.stream("POST","https://api.deepseek.com/chat/completions",
                                         headers={"Authorization": f"Bearer {Mykey}"},
                                         json={
@@ -264,6 +264,8 @@ async def chat_stream(data: chatRequest):
                             try:
                                 chunk = json.loads(json_str)
                                 content = chunk["choices"][0]["delta"]["content"]
+                                if not content:
+                                  continue
                                 yield f"data: {json.dumps({'content': content} , ensure_ascii=False)}\n\n"
                             except(json.JSONDecodeError, KeyError, IndexError):
                                 print(f"[解析失败] {json_str}")

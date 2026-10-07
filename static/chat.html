@@ -3,9 +3,118 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chat逻辑自测</title>
+  <title>我的AI助手</title>
+  <style>
+  *{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  body{
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #f0f4f8;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  .chat-container{
+    width: 100%;
+    max-width: 700px;
+    background: #fff;
+    border-radius: 16px;
+    height: 80vh;
+    box-shadow: 0 10px 40px rgba(102, 126, 234, 0.15);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .chat-header{
+    padding: 16px 20px;
+    background: #667eea;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 16px;
+  }
+  #out{
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  #out > div {
+    max-width: 80%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    line-height: 1.5;
+    font-size: 15px;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+  }
+  #out >div.user{
+    align-self: flex-end;
+    background: #667eea;
+    color: #ffffff;
+    border-bottom-right-radius: 4px;
+  }
+  #out >div.ai{
+    align-self: flex-start;
+    background: #f0f2f5;
+    color: #333333;
+    border-bottom-left-radius: 4px;
+  }
+  .input-area{
+    display: flex;
+    padding: 12px 16px;
+    border-top: 1px solid #e5e7eb;
+    gap: 10px;
+    background: #ffffff;
+  }
+  #msg {
+    flex: 1;
+    padding: 10px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 24px;
+    outline: none;
+    font-size: 15px;
+    transition: border-color 0.2s;
+  }
+  #msg:focus {
+    border-color: #667eea;
+  }
+  #sent {
+    padding: 10px 24px;
+    background: #667eea;
+    color: #ffffff;
+    border: none;
+    border-radius: 24px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+  }
+  #sent:hover {
+    background: #5568d3;
+    transform: scale(1.02);
+  }
+
+  #sent:active {
+    transform: scale(0.98);
+  }
+  </style>
 </head>
 <body>
-  <script src="./chat.js"></script>
+  <div class="chat-container">
+    <div class="chat-header">我的 AI 助手</div>
+    <div id="out"></div>
+    <div class="input-area">
+      <input type="text" id="msg" placeholder="说点什么呢……">
+      <button id="sent">发送</button>
+    </div>
+  </div>
+  <script type="module" src="./chat-ui.js"></script>
 </body>
 </html>
