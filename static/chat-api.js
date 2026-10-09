@@ -1,4 +1,3 @@
-const decoder = new TextDecoder('utf-8')
 function createParser(onEvent){
  let buf = ""
  return (text) =>{
@@ -17,11 +16,17 @@ function createParser(onEvent){
 }
 async function streamChat(message,{onChunk=()=>{}, onError=(e)=>console.log(e)
 , onDone=()=>{}}){
+try{
+  const decoder = new TextDecoder('utf-8')
   const res = await fetch('/api/chat/stream',{
     method:'POST',
     headers:{'Content-Type': 'application/json'},
     body:JSON.stringify({message})
   })
+  if (res.status === 401) { 
+    onError(`HTTP 401 ${(await res.json()).detail}`); 
+    return 
+  }
   if(res.status !== 200){
     onError(`HTTP ${res.status}`)
     return
@@ -50,7 +55,10 @@ async function streamChat(message,{onChunk=()=>{}, onError=(e)=>console.log(e)
   }
   if (!sawDone) {
     onError("连接提前中断，没收到 [DONE]")
-}
+  }
+  }catch(e){
+  onError(`网络异常：${e.message}`)
+  }
 }
 // 导出给其他文件用（模块化写法）
 export { streamChat };
