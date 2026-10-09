@@ -30,11 +30,9 @@ let busy = false
        outDiv.scrollTop = outDiv.scrollHeight
      },
      onError: (e) => {
-       if (String(e).includes('401')) {
-       aiDiv.textContent += `\n[错误] 登录已过期，请重新登录`;
+       aiDiv.textContent += `\n[错误] ${e}`
+       if (String(e).includes('401')) {   
        setTimeout(() => { location.href = '/static/login.html?next=' + encodeURIComponent('/static/chat.html') }, 2000);
-      } else {
-        aiDiv.textContent += `\n[错误] ${e}`;
       }
      }
   })
