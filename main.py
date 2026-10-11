@@ -15,7 +15,7 @@ from datetime import datetime, timedelta
 from dependencies import get_current_user
 from fastapi.responses import StreamingResponse
 import json
-
+from rate_limit import rate_limit_stream
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "blog.db"
 static_dir = Path(__file__).resolve().parent / "static"
@@ -283,7 +283,7 @@ def login(data: UserLogin, response: Response):
         )
         return {"message": "登录成功", "username": user.username}
 
-
+    
 @app.get("/api/me", response_model=UserOut)
 def get_me(current_user: User = Depends(get_current_user)):
     return current_user
@@ -291,11 +291,10 @@ def get_me(current_user: User = Depends(get_current_user)):
 
 @app.post("/api/chat/stream")
 async def chat_stream(
-    data: chatRequest, current_user: User = Depends(get_current_user)
+    data: chatRequest, current_user: User = Depends(rate_limit_stream)
 ):
     if not Mykey:
         raise HTTPException(500, "服务配置错误")
-
     async def gen():
         try:
             async with httpx.AsyncClient(
