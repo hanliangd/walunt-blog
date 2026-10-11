@@ -19,6 +19,20 @@
     min-height: 100vh;
     padding: 20px;
   }
+  /* 闪烁光标 */
+  .cursor {
+    display: inline-block;
+    width: 2px;           /* 👈 控制粗细 */
+    height: 1em;          /* 👈 和文字一样高 */
+    background: #667eea;  /* 👈 和你的主题色一致 */
+    margin-left: 2px;     /* 👈 和文字保持一点距离 */
+    vertical-align: text-bottom;  /* 👈 和文字对齐 */
+    animation: blink 1s step-end infinite;
+  }
+
+  @keyframes blink {
+    50% { opacity: 0; }
+  }
   .chat-container{
     width: 100%;
     max-width: 700px;
@@ -36,6 +50,14 @@
     color: #ffffff;
     font-weight: 600;
     font-size: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  #userInfo {
+    font-size: 14px;
+    font-weight: 400;
+    opacity: 0.9;
   }
   #out{
     flex: 1;
@@ -108,7 +130,10 @@
 </head>
 <body>
   <div class="chat-container">
-    <div class="chat-header">我的 AI 助手</div>
+    <div class="chat-header">
+      <span>我的 AI 助手</span>
+      <span id="userInfo">加载中...</span>
+    </div>
     <div id="out"></div>
     <div class="input-area">
       <input type="text" id="msg" placeholder="说点什么呢……">
