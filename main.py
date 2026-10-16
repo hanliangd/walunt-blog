@@ -16,6 +16,10 @@ from dependencies import get_current_user
 from fastapi.responses import StreamingResponse
 import json
 from rate_limit import rate_limit_stream
+from models import Conversation, Message
+from generate_title import _fill_title
+import asyncio
+
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "blog.db"
 static_dir = Path(__file__).resolve().parent / "static"
@@ -24,6 +28,14 @@ Mykey = os.getenv("MydeepseekKey")
 app = FastAPI()
 app.mount("/static", StaticFiles(directory=str(static_dir), html=True), name="static")
 
+_bg_tasks: set = set()  # 关键：不留引用，任务可能被 GC 掉
+
+
+def _spawn(coro):
+    t = asyncio.create_task(coro)
+    _bg_tasks.add(t)
+    t.add_done_callback(_bg_tasks.discard)  # 完成后自动移除，防止集合无限增长
+
 
 class UserCreat(BaseModel):
     name: str
@@ -31,6 +43,7 @@ class UserCreat(BaseModel):
 
 
 class chatRequest(BaseModel):
+    conversation_id: int
     message: str = Field(min_length=1, max_length=2000)
 
 
@@ -283,7 +296,7 @@ def login(data: UserLogin, response: Response):
         )
         return {"message": "登录成功", "username": user.username}
 
-    
+
 @app.get("/api/me", response_model=UserOut)
 def get_me(current_user: User = Depends(get_current_user)):
     return current_user
@@ -295,6 +308,42 @@ async def chat_stream(
 ):
     if not Mykey:
         raise HTTPException(500, "服务配置错误")
+    # 检查会话是否存在且属于当前用户
+    with SessionLocal() as session:
+        conversation = session.scalars(
+            select(Conversation).where(
+                Conversation.id == data.conversation_id,
+                Conversation.user_id == current_user.id,
+            )
+        ).first()
+        if not conversation:
+            raise HTTPException(404, "会话不存在")
+        # 存用户信息
+        user_msg = Message(
+            conversation_id=data.conversation_id, role="user", content=data.message
+        )
+        session.add(user_msg)
+        # 更新会话时间
+        conversation.updated_at = datetime.now()
+        # 检查是否需要生成标题
+        need_title = (not conversation.title) or (conversation.title == "新会话")
+        if need_title:
+            conversation.title = data.message[:20]
+        session.commit()
+        # 获取历史消息
+        history = session.scalars(
+            select(Message)
+            .where(Message.conversation_id == data.conversation_id)
+            .order_by(Message.id.desc())
+            .limit(20)
+        ).all()
+        history.reverse()
+        while history and history[0].role != "user":
+            history.pop(0)
+        messages_for_deepseek = [
+            {"role": msg.role, "content": msg.content} for msg in history
+        ]
+
     async def gen():
         try:
             async with httpx.AsyncClient(
@@ -306,7 +355,7 @@ async def chat_stream(
                     headers={"Authorization": f"Bearer {Mykey}"},
                     json={
                         "model": "deepseek-chat",
-                        "messages": [{"role": "user", "content": data.message}],
+                        "messages": messages_for_deepseek,
                         "stream": True,
                         "max_tokens": 1024,
                     },
@@ -319,6 +368,8 @@ async def chat_stream(
                         yield f"data: {json.dumps({'error': '模型服务暂时不可用'})}\n\n"
                         yield "data: [DONE]\n\n"
                         return
+                    # ai_reply 用于存储完整的 AI 回复内容，最后存入数据库
+                    ai_reply = ""
                     async for line in r.aiter_lines():
                         if not line:
                             continue
@@ -326,16 +377,37 @@ async def chat_stream(
                             yield "data: [DONE]\n\n"
                             break
                         if line.startswith("data:"):
-                            json_str = line.removeprefix("data: ").strip()
+                            json_str = line.removeprefix("data:").strip()
                             try:
                                 chunk = json.loads(json_str)
                                 content = chunk["choices"][0]["delta"]["content"]
                                 if not content:
                                     continue
+                                ai_reply += content
                                 yield f"data: {json.dumps({'content': content} , ensure_ascii=False)}\n\n"
                             except (json.JSONDecodeError, KeyError, IndexError):
                                 print(f"[解析失败] {json_str}")
                                 continue
+                    # 将 AI 回复存入数据库
+                    if ai_reply:
+                        with SessionLocal() as session:
+                            ai_msg = Message(
+                                conversation_id=data.conversation_id,
+                                role="assistant",
+                                content=ai_reply,
+                            )
+                            session.add(ai_msg)
+                            session.commit()
+                    # 异步生成标题
+                    if need_title:
+                        _spawn(
+                            _fill_title(
+                                api_key=Mykey,
+                                conversation_id=data.conversation_id,
+                                user_message=data.message,
+                                ai_reply=ai_reply,
+                            )
+                        )
         except httpx.TimeoutException:
             yield f"data: {json.dumps({'error': '模型服务响应超时'})}\n\n"
             yield "data: [DONE]\n\n"
@@ -345,3 +417,56 @@ async def chat_stream(
             yield "data: [DONE]\n\n"
 
     return StreamingResponse(gen(), media_type="text/event-stream")
+
+
+@app.post("/api/conversations", status_code=201)
+def create_conversation(current_user: User = Depends(get_current_user)):
+    with SessionLocal() as session:
+        conversation = Conversation(user_id=current_user.id, title="新会话")
+        session.add(conversation)
+        session.commit()
+        session.refresh(conversation)
+        return {
+            "id": conversation.id,
+            "created_at": conversation.created_at.isoformat(),
+            "title": conversation.title,
+        }
+
+
+@app.get("/api/conversations")
+def list_conversations(current_user: User = Depends(get_current_user)):
+    with SessionLocal() as session:
+        convs = session.scalars(
+            select(Conversation)
+            .where(Conversation.user_id == current_user.id)
+            .order_by(Conversation.updated_at.desc())
+        ).all()
+        return [
+            {
+                "id": conv.id,
+                "title": conv.title,
+                "updated_at": conv.updated_at.isoformat(),
+            }
+            for conv in convs
+        ]
+
+
+@app.get("/api/conversations/{conversation_id}/messages")
+def get_conversation_messages(
+    conversation_id: int, current_user: User = Depends(get_current_user)
+):
+    with SessionLocal() as session:
+        conversation = session.scalars(
+            select(Conversation).where(
+                Conversation.id == conversation_id,
+                Conversation.user_id == current_user.id,
+            )
+        ).first()
+        if not conversation:
+            raise HTTPException(404, "会话不存在")
+        messages = session.scalars(
+            select(Message)
+            .where(Message.conversation_id == conversation.id)
+            .order_by(Message.id.asc())
+        ).all()
+        return [{"role": msg.role, "content": msg.content} for msg in messages]
