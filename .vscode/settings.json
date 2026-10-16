@@ -1,0 +1,31 @@
+{
+  // ① Pylance 不分析这些（治右下角那条提示）
+  "python.analysis.exclude": [
+    "**/static/img",
+    "**/实习材料",
+    "**/__pycache__",
+    "**/.venv"
+  ],
+  // ② Pylance 只分析“打开的文件”——对性能影响最大的一条
+  "python.analysis.diagnosticMode": "openFilesOnly",
+
+  // ③ 文件监听器别盯大目录（“整机卡”的主因之一）
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/static/img/**": true,
+    "**/__pycache__/**": true,
+    "**/*.db": true
+  },
+
+  // ④ 资源管理器里不显示编译产物
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/*.pyc": true
+  },
+
+  // ⑤ 全局搜索（Ctrl+Shift+F）不扫媒体
+  "search.exclude": {
+    "**/static/img": true,
+    "**/.git": true
+  }
+}
