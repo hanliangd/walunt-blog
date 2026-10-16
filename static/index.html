@@ -5,13 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>walunt的宝藏之地</title>
 </head>
-<link rel="stylesheet" href="./base修改版.css">
-<link rel="stylesheet" href="./index修改版.css">
+<!-- ?v= 用来顶掉浏览器缓存（改了 CSS 但页面没变化时先看这里） -->
+<link rel="stylesheet" href="./base修改版.css?v=20261013-10">
+<link rel="stylesheet" href="./card.css?v=20261013-10">
+<link rel="stylesheet" href="./index修改版.css?v=20261013-10">
 <link rel="shortcut icon" href="./img/favicon-32x32.png" type="image/x-icon">
 <body>
-    <video src="./img/【哲风壁纸】伊蕾娜-傍晚.mp4" autoplay loop muted playsinline class="video-bg"></video>
+    <!-- 全屏背景图：两层交叉淡入，结构与样式同 xhs卡片示例.html；轮播逻辑在 render.js -->
+    <div class="bg-layer"></div>
+    <div class="bg-layer bg-layer--b" id="bgB"></div>
     <header>
-        <div class="head">
+        <div class="head card-glass">
          <a href="" class="logo">
             walunt
             <span>の</span>
@@ -22,11 +26,11 @@
          </div>
         </div>
         <nav>
-            <input type="text" placeholder="搜寻标题 、描述或标签……">
+            <input type="text" placeholder="搜寻标题 、描述或标签……" class="card-glass">
             <span class="iconfont">&#xe602;</span>
         </nav>
         <div class="box">
-            <div class="content1">
+            <div class="content1 card-glass">
                 <div class="column1">
                     <div class="img"><img src="./img/IMG_20260710_155439.png" alt=""></div >
                     <div class="profile">
@@ -71,7 +75,7 @@
                     </div>
                 </div>
             </div>
-            <div class="content2">
+            <div class="content2 card-glass">
                 <div class="song">
                     <img src="./img/Camera_XHS_1783947605015.jpg" alt="">
                     <div class="media-name">
@@ -116,43 +120,62 @@
         <div class="picture">
             
           <li> 
-            <div>
+            <div class="card-glass">
                 <img src="./img/1775056449011.png" alt="">
                 <img src="./img/pixiv_works_147120403_p0.png" alt="">
                 <img src="./img/1780979159506.jpeg" alt="">
             </div>
           </li>
           <li>
-            <div>
+            <div class="card-glass">
                 <img src="./img/120767239_p0.jpg" alt="">
                 <img src="./img/1781077086728.png" alt="">
                 <img src="./img/pixiv_works_138492961_p0.png" alt="">
             </div>
           </li>
           <li>
-            <div>
+            <div class="card-glass">
                 <img src="./img/1780451009835.jpeg" alt="">
                 <img src="./img/1780589451644.jpeg" alt="">
                 <img src="./img/pixiv_works_147004205_p0.png" alt="">
             </div>
           </li>
+          <!-- 模式卡：结构照搬原站那张「翻转圆盘卡」
+               （xhs卡片示例.html 的 #themeCard / card-demo.html 的 ③ 号卡）
+               圆盘两层渐变 + emoji 的翻转机制在 card.css 第 5 节 .moon 里，
+               方向由 index修改版.css 覆盖成「卡面 = 当前所处模式」；
+               这里只放结构，JS 只负责换主题和那两行文案。
+               初始文案必须是浅色态那套（= 日间模式 / 晨光熹微），JS 没跑起来也不能错 -->
           <li>
-            <div>
-                <button id="themeToggle">
-                    <div class="bg-toggle">
-                        <span class="iconfont">&#xe6eb;</span>
-                    </div>
-                    <p>日间模式</p>
-                </button>
+            <div class="card-glass theme-card" id="themeCard" role="button" tabindex="0">
+              <div class="moon" aria-hidden="true">
+                <i class="day"></i><i class="night"></i>
+                <em class="day">☀️</em><em class="night">🌙</em>
+              </div>
+              <h3 class="theme-title">日间模式</h3>
+              <p class="theme-sub">晨光熹微</p>
             </div>
           </li>
         </div>
-        <div class="footer">
-        
+        <div class="status-bar">
+         <div class="status-bar__clock" id="clock">00:00:00</div>
+         <div class="status-bar__main">
+          <div class="status-bar__uptime">
+           <span class="dot-live"></span>
+           <span>系统已稳定运行：<b id="uptime"></b></span>
+          </div>
+          <div class="status-bar__stack">
+            <span class="chip"><i style="--c:#059669"></i>FastAPI</span>
+            <span class="chip"><i style="--c:#f59e0b"></i>原生 JS</span>
+            <span class="chip"><i style="--c:#0ea5e9"></i>SQLite</span>
+            <span class="chip"><i style="--c:#8b5cf6"></i>SSE 流式</span>
+          </div>
+         </div>
         </div>
     </header>
+    <script type="module" src="./status-bar.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
     <!-- <script src="./data.js"></script> -->
-    <script src="./render.js"></script>
+    <script src="./render.js?v=20261013-10"></script>
 </body>
-</html>
+</html>  

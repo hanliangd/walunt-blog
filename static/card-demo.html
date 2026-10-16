@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>xhs 卡片示例 · 改为引用 card.css</title>
+<!-- 卡片样式全部来自 card.css（抽取自 xhs卡片示例.html 的内联 <style>），
+     本页只保留演示页自己的骨架（背景图 / 12 栏栅格 / 页面容器）。 -->
+<link rel="stylesheet" href="./card.css">
+<style>
+  /* ===== 演示页骨架（非卡片系统） ===== */
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    min-height:100vh;
+    font-family:"Noto Serif SC","Microsoft YaHei",system-ui,serif;
+    color:var(--fg, #0f172a);
+    background:#f8fafc;
+    transition:background-color 1s, color .5s;
+  }
+  [data-theme="dark"] body{ background:#020617; }
+
+  /* 全屏背景图 + 交叉淡入（原站是 fixed inset-0 + background-size:cover 的两层轮播） */
+  .bg-layer{
+    position:fixed; inset:0; z-index:-2;
+    background:#0b1120 center/cover no-repeat;
+    background-image:url("https://bu.dusays.com/2026/03/24/69c1e38b4c370.jpg");
+  }
+  .bg-layer--b{
+    z-index:-1; opacity:0; transition:opacity 2000ms ease-in-out;
+    background-image:url("https://bu.dusays.com/2026/03/24/69c26fe4acdb5.jpg");
+  }
+  .bg-layer--b.is-on{ opacity:1; }
+
+  /* 布局（grid grid-cols-1 lg:grid-cols-12 gap-6） */
+  .page{ width:100%; max-width:1080px; margin:0 auto; padding:48px 16px 80px; }
+  .grid{ display:grid; grid-template-columns:repeat(12,1fr); gap:24px; }
+  .col-7{ grid-column:span 7; } .col-5{ grid-column:span 5; }
+  .col-8{ grid-column:span 8; } .col-4{ grid-column:span 4; }
+  .col-12{ grid-column:span 12; }
+  @media (max-width:1024px){
+    .grid{ grid-template-columns:1fr; }
+    .col-7,.col-5,.col-8,.col-4,.col-12{ grid-column:span 1; }
+  }
+</style>
+</head>
+<body>
+    <div class="bg-layer"></div>
+    <div class="bg-layer bg-layer--b" id="bgB"></div>
+
+    <div class="page">
+
+      <!-- ① 玻璃搜索框 -->
+      <form class="search" onsubmit="return false;">
+        <input type="text" placeholder="搜索标题、描述或标签..." autocomplete="off">
+        <span class="icon" aria-hidden="true">🔍</span>
+      </form>
+
+      <!-- ② 资料卡（头像渐变描边 + 数字 Stat）+ ③ 夜间模式翻转卡 -->
+      <div class="grid" style="margin-bottom:24px;">
+        <div class="col-7">
+          <div class="card card--profile card--lift" style="padding:32px;height:100%;">
+            <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
+              <div class="avatar">
+                <img src="https://bu.dusays.com/2026/03/24/69c1e38ac1846.jpg" alt="avatar">
+              </div>
+              <div style="flex:1;min-width:220px;">
+                <h2>XingHuiSama</h2>
+                <p class="desc">在代码、学术与分子动力学模拟间穿梭的普通人。近期正埋头于 GROMACS 模拟研究与神经网络计算。</p>
+              </div>
+            </div>
+            <div class="stats">
+              <div class="stat"><b>77</b><span>文章</span></div>
+              <div class="stat"><b>17</b><span>杂谈</span></div>
+              <div class="stat"><b>11</b><span>照片</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-5">
+          <div class="card card--theme card--pop" id="themeCard" role="button" tabindex="0"
+               style="padding:24px;height:100%;align-items:center;justify-content:center;text-align:center;">
+            <div class="moon">
+              <i class="day"></i>
+              <i class="night"></i>
+              <em class="day">☀️</em><em class="night">🌙</em>
+            </div>
+            <h3 style="margin:12px 0 0;font-size:20px;">夜间模式</h3>
+            <p style="margin:4px 0 0;font-size:14px;color:var(--fg-sub, #475569);">流萤飞舞的深空</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ④ 封面图卡（照片墙）+ ⑤ 文章卡（徽章 + 标题 + line-clamp） -->
+      <div class="grid" style="margin-bottom:24px;">
+        <div class="col-8">
+          <a class="card card--cover card--big" href="#">
+            <img class="cover" src="https://bu.dusays.com/2026/05/07/69fc46808a782.jpg" alt="cover">
+            <div class="veil"></div>
+            <div class="body">
+              <h3>二六年南昌五一摄影</h3>
+              <p>随便拍拍</p>
+            </div>
+          </a>
+        </div>
+
+        <div class="col-4">
+          <a class="card card--cover card--big" href="#">
+            <img class="cover" src="https://bu.dusays.com/2026/05/12/6a02e3a107b1a.png" alt="cover">
+            <div class="veil"></div>
+            <div class="body">
+              <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+                <span class="badge">Latest Insight</span>
+                <span class="badge badge--ghost">2026.05.12</span>
+              </div>
+              <h3 style="font-size:22px;">Leetcode 一百题——单词搜索</h3>
+              <p>遍历加搜索</p>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <!-- ⑥ 复古电子钟条 -->
+      <div class="grid">
+        <div class="col-12">
+          <div class="card card--bar">
+            <div class="clock" id="clock">00:00:00</div>
+            <div class="meta">
+              <span>CONNECTING...</span>
+              <span>系统已稳定运行：<b id="uptime">0 天 0 小时 0 分</b></span>
+              <span style="display:flex;gap:8px;flex-wrap:wrap;">
+                <span class="chip">Next.js 15</span>
+                <span class="chip">React 19</span>
+                <span class="chip">Tailwind 4</span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <script>
+      /* 主题切换：原站是给 <html> 加 .dark 类（CSS 里 .dark\:*:where(.dark,.dark *)）
+         这里用等价写法 data-theme 属性；想完全照搬就把下面两处换成 classList.toggle('dark') */
+      var root = document.documentElement;
+      var themeCard = document.getElementById('themeCard');
+      function toggleTheme(){
+        root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+      }
+      themeCard.addEventListener('click', toggleTheme);
+      themeCard.addEventListener('keydown', function(e){
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleTheme(); }
+      });
+
+      /* 电子钟 + 运行时长 */
+      var clockEl = document.getElementById('clock');
+      var upEl = document.getElementById('uptime');
+      var t0 = Date.now();
+      function pad(n){ return String(n).padStart(2, '0'); }
+      function tick(){
+        var d = new Date();
+        clockEl.textContent = pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+        var s = Math.floor((Date.now() - t0) / 1000);
+        upEl.textContent = Math.floor(s / 86400) + ' 天 ' + Math.floor(s % 86400 / 3600) + ' 小时 ' + Math.floor(s % 3600 / 60) + ' 分';
+      }
+      tick();
+      setInterval(tick, 1000);
+
+      /* 背景图交叉淡入（复刻原站两层图 2000ms 过渡的轮播） */
+      var bgB = document.getElementById('bgB');
+      setInterval(function(){ bgB.classList.toggle('is-on'); }, 8000);
+    </script>
+</body>
+</html>

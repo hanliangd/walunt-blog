@@ -1,0 +1,356 @@
+/* =========================================================
+   card.css · 玻璃卡片设计系统（原生 CSS，可直接 <link> 引用）
+   ---------------------------------------------------------
+   抽取来源：xhs卡片示例.html 的 <style>
+   原站：xinghuisama.top —— Next.js 15 + React 19 + Tailwind 4。
+   原站卡片没有 .card 类，全靠工具类拼装（例如：
+     rounded-3xl bg-white/40 dark:bg-slate-800/50 backdrop-blur-md
+     border border-white/40 dark:border-white/10 shadow-xl overflow-hidden
+   这里把这些工具类固化成可复用的组件类 + CSS 变量。
+
+   深色：用本项目的 [data-theme="dark"]（等价于原站给 <html> 加 .dark）。
+   变量：本文件自带默认值，可独立使用；项目里由 base修改版.css 的
+        「卡片设计系统令牌」段提供同名变量，两处值一致，谁先加载都一样。
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   0) 设计令牌（Tailwind 工具类 → CSS 变量）
+   --------------------------------------------------------- */
+:root{
+  /* 圆角 */
+  --radius-card: 24px;      /* rounded-3xl  */
+  --radius-lg: 16px;        /* rounded-2xl  */
+  --radius-md: 12px;        /* rounded-xl   */
+  --radius-sm: 8px;         /* rounded-lg   */
+  --radius-pill: 9999px;    /* rounded-full */
+
+  /* 卡片玻璃层 */
+  --card-bg: rgba(255, 255, 255, .40);       /* bg-white/40          */
+  --card-border: rgba(255, 255, 255, .40);   /* border-white/40      */
+  --card-blur: 20px;                         /* 原 backdrop-blur-md 是 12px，与 base修改版.css 同值 */
+  --card-shadow: 0 20px 25px -5px rgba(0, 0, 0, .1), 0 8px 10px -6px rgba(0, 0, 0, .1); /* shadow-xl，与 base修改版.css 同值 */
+  --card-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, .1), 0 4px 6px -4px rgba(0, 0, 0, .1);   /* shadow-lg */
+
+  /* 主题色 */
+  --indigo: #6366f1;        /* indigo-500 */
+  --indigo-400: #818cf8;    /* indigo-400 */
+  --purple: #a855f7;        /* purple-500 */
+  --pink: #f472b6;          /* pink-400   */
+  --green: #22c55e;         /* green-500  */
+
+  /* 文字 */
+  --fg: #0f172a;            /* slate-900 */
+  --fg-sub: #475569;        /* slate-600 */
+
+  /* 电子钟条 / 徽章 */
+  --clock-bg: #0f172a;                       /* slate-900 */
+  --chip-bg: rgba(255, 255, 255, .5);
+  --chip-border: rgba(255, 255, 255, .4);
+  --shadow-inset: inset 0 2px 4px rgba(0, 0, 0, .05);   /* shadow-inner */
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --dur: 700ms;             /* duration-700 */
+}
+[data-theme="dark"]{
+  --card-bg: rgba(30, 41, 59, .50);          /* dark:bg-slate-800/50  */
+  --card-border: rgba(255, 255, 255, .10);   /* dark:border-white/10  */
+  --fg: #ffffff;
+  --fg-sub: #cbd5e1;                         /* slate-300 */
+  --clock-bg: #000;                          /* dark:bg-black */
+  --chip-bg: rgba(51, 65, 85, .5);           /* slate-700/50 */
+  --chip-border: #475569;                    /* slate-600    */
+}
+
+/* ---------------------------------------------------------
+   1) 卡片核心
+   --------------------------------------------------------- */
+.card{
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;                        /* overflow-hidden       */
+  border-radius: var(--radius-card);       /* rounded-3xl           */
+  background-color: var(--card-bg);        /* bg-white/40           */
+  border: 1px solid var(--card-border);    /* border border-white/40 */
+  box-shadow: var(--card-shadow);          /* shadow-xl             */
+  -webkit-backdrop-filter: blur(var(--card-blur));   /* backdrop-blur-md */
+  backdrop-filter: blur(var(--card-blur));
+  transition: transform var(--dur) ease, background-color var(--dur) ease,
+              border-color var(--dur) ease, box-shadow var(--dur) ease;
+  transform: translateZ(0);                /* 单独图层：blur + 缩放更顺滑 */
+}
+/* hover:scale-[1.01] / hover:scale-[1.02] / hover:scale-[1.05] */
+.card--lift:hover{ transform: scale(1.01) translateZ(0); }
+.card--big:hover { transform: scale(1.02) translateZ(0); }
+.card--pop:hover { transform: scale(1.05) translateZ(0); }
+
+/* 不支持 backdrop-filter 的降级：把卡片底改得更实，保证可读性 */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))){
+  :root{ --card-bg: rgba(255, 255, 255, .86); }
+  [data-theme="dark"]{ --card-bg: rgba(15, 23, 42, .9); }
+}
+
+/* ---------------------------------------------------------
+   2) 徽章
+      px-3 py-1 bg-indigo-500/80 backdrop-blur-lg rounded-full
+      text-[10px] text-white font-black uppercase tracking-widest shadow-lg
+   --------------------------------------------------------- */
+.badge{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;                       /* px-3 py-1        */
+  border-radius: var(--radius-pill);       /* rounded-full     */
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .15em;                   /* tracking-widest  */
+  color: #fff;
+  background: rgba(99, 102, 241, .8);      /* bg-indigo-500/80 */
+  -webkit-backdrop-filter: blur(16px);     /* backdrop-blur-lg */
+  backdrop-filter: blur(16px);
+  box-shadow: var(--card-shadow);
+}
+.badge--ghost{                             /* bg-black/40 border border-white/20 */
+  background: rgba(0, 0, 0, .4);
+  font-weight: 700;
+  letter-spacing: .05em;
+  border: 1px solid rgba(255, 255, 255, .2);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+/* ---------------------------------------------------------
+   3) 封面图卡：图片铺满 + 渐变遮罩 + 底部标题
+      原站靠 group + group-hover:scale-105；原生 CSS 里就是 .card:hover .cover
+   --------------------------------------------------------- */
+.card--cover{
+  justify-content: flex-end;
+  min-height: 220px;
+  text-decoration: none;
+}
+.card--cover .cover{                       /* absolute inset-0 object-cover opacity-90 */
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: .9;
+  transition: transform 1000ms ease, opacity 500ms ease;   /* duration-1000 / 500 */
+}
+.card--cover:hover .cover{ transform: scale(1.05); }       /* group-hover:scale-105 */
+.card--cover .veil{                        /* bg-gradient-to-t from-black/90 via-black/30 */
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, .9), rgba(0, 0, 0, .3) 50%, transparent);
+}
+.card--cover .veil--r{                     /* 横向遮罩 bg-gradient-to-r */
+  background: linear-gradient(to right, rgba(0, 0, 0, .8), rgba(0, 0, 0, .4) 50%, rgba(0, 0, 0, .1));
+}
+.card--cover .body{
+  position: relative;
+  z-index: 10;
+  padding: 24px;
+  margin-top: auto;
+}
+.card--cover h3{
+  margin: 0 0 8px;
+  font-size: 28px;
+  line-height: 1.25;
+  color: #fff;
+  text-decoration: underline;
+  text-decoration-color: var(--pink);      /* decoration-pink-400 */
+  text-underline-offset: 6px;
+}                       /* text-3xl font-bold text-white underline decoration-pink-400 */
+.card--cover p{
+  margin: 0;
+  color: rgba(255, 255, 255, .9);
+  font-size: 16px;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;                        /* line-clamp-1 */
+}
+
+/* ---------------------------------------------------------
+   4) 头像 + 渐变描边 + 资料卡
+      w-24 h-24 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-500
+      p-1 shadow-lg group-hover:rotate-3
+   --------------------------------------------------------- */
+.avatar{
+  width: 96px;
+  height: 96px;
+  padding: 4px;
+  flex: 0 0 auto;
+  border-radius: var(--radius-lg);                        /* rounded-2xl */
+  background-image: linear-gradient(to top right, var(--indigo), var(--purple));
+  box-shadow: var(--card-shadow-lg);                      /* shadow-lg  */
+  transition: transform 500ms ease;
+}
+.card:hover .avatar{ transform: rotate(3deg); }           /* group-hover:rotate-3 */
+.avatar img{
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-md);                        /* rounded-xl  */
+  object-fit: cover;
+  background: #fff;                                       /* object-cover */
+}
+
+/* 资料卡文字 / 数字 Stat */
+.card--profile h2{ margin: 0; font-size: 26px; }
+.card--profile .desc{ margin: 10px 0 0; color: var(--fg-sub); font-size: 15px; line-height: 1.7; }
+.stats{ display: flex; flex-wrap: wrap; gap: 12px; margin-top: 22px; }
+.stat{
+  min-width: 84px;
+  padding: 10px 14px;
+  text-align: center;
+  border-radius: var(--radius-sm);                        /* rounded-lg */
+  background: rgba(255, 255, 255, .45);
+  border: 1px solid var(--card-border);
+}
+[data-theme="dark"] .stat{ background: rgba(51, 65, 85, .45); }   /* dark:bg-slate-700/45 */
+.stat b{ display: block; font-size: 20px; }
+.stat span{ font-size: 12px; color: var(--fg-sub); }
+
+/* ---------------------------------------------------------
+   5) 「夜间模式」翻转圆盘卡
+      上下两层渐变用 translateY 互推；emoji 同时 rotate(90deg)+scale(.5) 淡入
+   --------------------------------------------------------- */
+.moon{
+  position: relative;
+  width: 80px;
+  height: 80px;
+  margin: 0 auto;
+  border-radius: var(--radius-pill);       /* rounded-full */
+  overflow: hidden;
+  flex: 0 0 auto;
+  box-shadow: var(--shadow-inset);         /* shadow-inner */
+}
+.moon i{ position: absolute; inset: 0; display: block; transition: transform var(--dur) ease; }
+.moon i.day  { background-image: linear-gradient(to top right, #7dd3fc, #fef08a); transform: translateY(-100%); }
+.moon i.night{ background-image: linear-gradient(to top right, #312e81, #1e293b); transform: translateY(0); }
+.moon em{                                  /* 居中 + 旋转淡入 */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  font-style: normal;
+  font-size: 30px;
+  transform: translate(-50%, -50%) rotate(90deg) scale(.5);
+  opacity: 0;
+  transition: all var(--dur) ease;
+}
+.moon em.night{ opacity: 1; transform: translate(-50%, -50%) rotate(0) scale(1); }
+/* 切到深色：两层互推 + emoji 换位 */
+[data-theme="dark"] .moon i.day  { transform: translateY(0); }
+[data-theme="dark"] .moon i.night{ transform: translateY(100%); }
+[data-theme="dark"] .moon em.day { opacity: 1; transform: translate(-50%, -50%) rotate(0) scale(1); }
+[data-theme="dark"] .moon em.night{ opacity: 0; transform: translate(-50%, -50%) rotate(90deg) scale(.5); }
+
+/* ---------------------------------------------------------
+   6) 复古电子钟条
+      bg-slate-900 font-mono tracking-widest + 中间一条 h-px bg-black/50 扫描线
+      + 顶部 from-white/10 高光。
+      注意：.chip 限定在 .card--bar 内，不会影响项目 index修改版.css 自己的 .chip。
+   --------------------------------------------------------- */
+.card--bar{ flex-direction: row; align-items: stretch; min-height: 80px; }
+.clock{
+  position: relative;
+  overflow: hidden;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 32px;
+  background: var(--clock-bg);             /* bg-slate-900 / dark:bg-black */
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 30px;
+  font-weight: 900;
+  letter-spacing: .2em;                    /* tracking-widest */
+  box-shadow: var(--shadow-inset);
+  transition: color var(--dur) ease;
+}
+.card--bar:hover .clock{ color: var(--indigo-400); }   /* group-hover:text-indigo-400 */
+.clock::before{                                          /* from-white/10 to-transparent */
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, .1), transparent);
+}
+.clock::after{                                           /* h-px bg-black/50 */
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: rgba(0, 0, 0, .5);
+}
+.card--bar .chip{
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);       /* rounded-full */
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--fg-sub);
+  background: var(--chip-bg);
+  border: 1px solid var(--card-border);
+}
+.card--bar .meta{
+  flex: 1 1 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 24px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--fg-sub);
+}
+
+/* ---------------------------------------------------------
+   7) 玻璃搜索框
+      bg-white/50 backdrop-blur-xl rounded-3xl border border-white/40 shadow-xl
+      focus:ring-2 focus:ring-indigo-500/50
+   --------------------------------------------------------- */
+.search{ position: relative; max-width: 672px; margin: 0 auto 32px; }
+.search input{
+  width: 100%;
+  padding: 16px 24px 16px 56px;
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--fg);
+  border-radius: var(--radius-card);       /* rounded-3xl */
+  background: rgba(255, 255, 255, .5);     /* bg-white/50  */
+  border: 1px solid var(--card-border);
+  box-shadow: var(--card-shadow);
+  outline: none;
+  -webkit-backdrop-filter: blur(24px);     /* backdrop-blur-xl */
+  backdrop-filter: blur(24px);
+  transition: box-shadow 200ms ease, background-color var(--dur) ease;
+}
+[data-theme="dark"] .search input{ background: rgba(29, 41, 61, .5); }   /* dark:bg-slate-800/50 */
+.search input::placeholder{ color: #94a3b8; }            /* placeholder:text-slate-400 */
+.search input:focus{ box-shadow: var(--card-shadow), 0 0 0 2px rgba(99, 102, 241, .5); }
+.search .icon{
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  pointer-events: none;
+  transition: color 200ms ease;
+}
+.search input:focus + .icon{ color: var(--indigo); }     /* group-focus-within:text-indigo-500 */
+
+/* ---------------------------------------------------------
+   8) 响应式（≤768px：电子钟条竖排、封面标题缩字）
+   --------------------------------------------------------- */
+@media (max-width: 768px){
+  .card--bar{ flex-direction: column; }
+  .card--cover h3{ font-size: 24px; }
+}
+
+

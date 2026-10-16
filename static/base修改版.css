@@ -14,7 +14,7 @@ body,body *{
     --color-control:lab(48.295% 38.3129 -81.9673);
     
     /* ===== 新增变量（只提取你 index.css 里的硬编码值） ===== */
-    --bg-white-06: rgba(255, 255, 255, 0.6);
+    --bg-white-06: rgba(255, 255, 255, 0.45);   /* 名字来自原来的 0.6；为强化玻璃感已调低到 0.45 */
     --bg-white-05: rgba(255, 255, 255, 0.5);
     --bg-white-04: rgba(255, 255, 255, 0.4);
     --bg-dark-purple: #2a2845;
@@ -30,6 +30,47 @@ body,body *{
     --gradient-text: linear-gradient(135deg, #4facfe, #00f2fe, #f093fb);
     --bg-progress: rgba(0, 0, 0, 0.1);
     --glow-blue: 0 0 10px rgba(100, 200, 255, 0.4), 0 0 40px rgba(100, 200, 255, 0.2), 0 0 80px rgba(100, 200, 255, 0.1);
+
+    /* ===== 【新增 · 抽取自 xhs卡片示例.html】卡片设计系统令牌 =====
+       原站的每个卡片都是这一串工具类拼出来的：
+         rounded-3xl bg-white/40 dark:bg-slate-800/50 backdrop-blur-md
+         border border-white/40 dark:border-white/10 shadow-xl overflow-hidden
+       这里把它们固化成变量：index修改版.css 与 card.css 统一引用，
+       以后调卡片只需要改这一段。
+       （card.css 里有同名默认值，两处数值保持一致；本文件后加载则以本文件为准） */
+    --radius-card: 24px;      /* rounded-3xl    */
+    --radius-lg: 16px;        /* rounded-2xl    */
+    --radius-md: 12px;        /* rounded-xl     */
+    --radius-sm: 8px;         /* rounded-lg     */
+    --radius-xs: 6px;         /* 项目里的小圆角 */
+    --radius-2xs: 5px;        /* 项目里的标签圆角 */
+    --radius-pill: 9999px;    /* rounded-full   */
+
+    --card-bg: rgba(255, 255, 255, 0.4);      /* bg-white/40      */
+    --card-border: rgba(255, 255, 255, 0.4);  /* border-white/40  */
+    --card-blur: 20px;                        /* 原 backdrop-blur-md 是 12px，实测调重到 20px */
+    --card-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+                   0 8px 10px -6px rgba(0, 0, 0, 0.1);   /* shadow-xl */
+
+    /* 玻璃层底色（只给 .card-glass 用）：比 --bg-white-06 更透，模糊才看得出来。
+       深色模式的值见下面 [data-theme="dark"]，那里不能再像顶栏那样 85% 实底。 */
+    --glass-fill: rgba(255, 255, 255, 0.45);
+
+    --indigo: #6366f1;        /* indigo-500 */
+    --indigo-400: #818cf8;    /* indigo-400 */
+    --purple: #a855f7;        /* purple-500 */
+    --green: #22c55e;         /* green-500  */
+
+    /* ===== 状态条（.status-bar）+ 徽章（.chip）专用令牌 =====
+       抽自 index修改版.css 里原来写死的颜色，深色值见下面的 [data-theme="dark"] */
+    --clock-bg: #0f172a;                          /* slate-900  */
+    --status-fg: #475569;                         /* slate-600  */
+    --status-accent: #4f46e5;                     /* indigo-600 */
+    --chip-bg: rgba(255, 255, 255, 0.5);
+    --chip-border: rgba(255, 255, 255, 0.4);
+    --shadow-inset: inset 0 2px 4px rgba(0, 0, 0, 0.05);   /* shadow-inner */
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --dur: 0.7s;                                  /* duration-700 */
 }
 /* ===== 深色模式 ===== */
 [data-theme="dark"] {
@@ -59,7 +100,29 @@ body,body *{
   
   /* 渐变遮罩：更深的黑色 */
   --gradient-dark: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+
+  /* ===== 【新增 · 抽取自 xhs卡片示例.html】卡片令牌的深色值 =====
+     对应原站的 dark:bg-slate-800/50、dark:border-white/10 等 */
+  --card-bg: rgba(30, 41, 59, 0.5);
+  --card-border: rgba(255, 255, 255, 0.1);
+
+  /* 玻璃层底色（深色）：原来是 85% 实底 → 卡背后完全看不见背景，模糊等于没有。
+     xhs 原站深色卡片是 dark:bg-slate-800/50（50%），这里取 55% 兼顾可读性。 */
+  --glass-fill: rgba(20, 20, 40, 0.55);
+
+  /* 状态条 + 徽章：原来写在文件下半部分的 5 条覆盖规则，已改成这些变量 */
+  --clock-bg: #000;
+  --status-fg: #cbd5e1;
+  --status-accent: #818cf8;
+  --chip-bg: rgba(51, 65, 85, 0.5);
+  --chip-border: #475569;
 }
+/* 状态条 + 徽章：深色模式覆盖
+   —— 这 5 条写死的覆盖规则已抽成变量，改由上面 [data-theme="dark"] 里的
+   --card-bg / --clock-bg / --status-fg / --status-accent / --chip-bg / --chip-border
+   自动切换，视觉结果完全一致（原来是 rgba(30,41,59,.5) 等硬编码值）。
+   index修改版.css 里 .status-bar / .chip 现在只引用变量，不再区分主题。 */
+
 body *{
     box-sizing: border-box;
     margin: 0%;

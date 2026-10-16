@@ -1,386 +1,423 @@
-.video-bg{
-    position: fixed;
-    z-index: -1000;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: filter 0.6s ease; 
+/* =========================================================
+   index修改版.css · 首页卡片样式
+   ---------------------------------------------------------
+   圆角 / 玻璃底色 / 边框 / 模糊 / 阴影 / 等宽字体 等一律引用
+   base修改版.css 里「卡片设计系统令牌」段的变量（抽取自 xhs卡片示例.html），
+   本文件不再出现写死的 24px、rgba(255,255,255,.4)、#818cf8 之类的卡片数值。
+   可复用的卡片组件类（.card / .badge / .card--cover / .card--bar …）见 card.css。
+   ========================================================= */
+
+/* =========================================================
+   全屏背景图（结构与样式照搬 xhs卡片示例.html 的两层交叉淡入）
+   ---------------------------------------------------------
+   A 层 .bg-layer      z-index:-2，常显，图片 background1-web.jpg
+                       （原图 background1.png 是 8996×4412 / 19.2MB，浏览器要解码
+                        39MP 才出图，首屏会先显示兜底纯色 —— 纯色上「模糊」看不出效果。
+                        已用同图另存 2560 宽的 JPEG：img/background1-web.jpg，约 420KB。
+                        原 PNG 仍在 img/ 里，没有删。）
+   B 层 .bg-layer--b   z-index:-1，默认透明，图片 background2.jpg
+   原站 JS（已按项目约定挪到 render.js，不写内联脚本）：
+     setInterval(() => bgB.classList.toggle('is-on'), 8000)
+   即：每 8s 切换一次 .is-on，配合 2000ms 缓动 → 两图交叉淡入轮播。
+   注意顺序：background 简写会把 background-image 重置为 none，
+            所以必须「先简写兜底色、再写 background-image」（与原站一致）。
+   ========================================================= */
+.bg-layer {
+  position: fixed;
+  inset: 0;
+  z-index: -2;                                  /* 垫在所有内容之下 */
+  background: #0b1120 center/cover no-repeat;    /* 图未加载时的兜底底色 */
+  background-image: url("./img/background1-web.jpg");
 }
-/* 深色模式下视频变暗 */
-[data-theme="dark"] .video-bg {
-    filter: brightness(0.45) saturate(0.7);
+.bg-layer--b {
+  z-index: -1;                                  /* 盖在 A 层之上、内容之下 */
+  opacity: 0;
+  transition: opacity 2000ms ease-in-out;        /* duration-[2000ms] */
+  background-image: url("./img/background2.jpg");
 }
-header{
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    
+.bg-layer--b.is-on { opacity: 1; }               /* render.js 每 8s 切换 */
+
+/* 夜间把背景压暗：照搬原视频版的 [data-theme="dark"] .video-bg
+   （原来视频版夜间会 brightness(0.45) saturate(0.7)，换成图片后这层别丢） */
+[data-theme="dark"] .bg-layer {
+  filter: brightness(0.45) saturate(0.7);
 }
-header .head{
-    width: 100%;
-    position: fixed;
-    top: 0;
-    padding-left: max(12px, calc((100% - 1080px) / 2));
-    padding-right: max(12px, calc((100% - 1080px) / 2));
-    height: 65px;
-    display: flex;
-    justify-content: space-between;
-    background-color: var(--bg-white-06);
-    box-shadow: var(--shadow-light);
-    border: 0 solid white;
-    transition: transform 0.4s ease;
+header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+header .head {
+  width: 100%;
+  position: fixed;
+  top: 0;
+  padding-left: max(12px, calc((100% - 1080px) / 2));
+  padding-right: max(12px, calc((100% - 1080px) / 2));
+  height: 65px;
+  display: flex;
+  justify-content: space-between;
+  background-color: var(--bg-white-06);
+  box-shadow: var(--shadow-light);
+  border: 0 solid white;
+  transition: transform 0.4s ease;
 }
 .head.hidden {
-      transform: translateY(-100%);
-    }
-header .head a{
-    width: 250px;
-    height: 100%;
-    font-size: 20px;                    
-    font-weight:900;
-    text-align: center;
-    line-height: 65px;
-    color: var(--color-ziti);
-    white-space: nowrap; 
-    
+  transform: translateY(-100%);
 }
-header .head a span{
-    color: var(--color-bule);
+header .head a {
+  width: 250px;
+  height: 100%;
+  font-size: 20px;
+  font-weight: 900;
+  text-align: center;
+  line-height: 65px;
+  color: var(--color-ziti);
+  white-space: nowrap;
 }
-header .nav {
-    width: auto;
-    flex: 1;
-    height: auto;
-    text-align: center;
-    line-height: 65px;
-    min-width: 0;
-}
-header .nav a{
-    width: 28px;
-    height: 28px;
-    color: var(--color-ziti);
-    font-size: 14px;
-    font-weight: 700;
-    margin-left: clamp(4px, 1.4vw, 23px);
-    white-space: nowrap;
-}
-header .nav a:nth-child(1){
-    color: var(--color-bule);
-}
-.logo:hover{  
-    color: var(--color-bule);
-}
-.nav .nav1:hover {
-    color: var(--color-bule);
-}
-/* ③ 四个 1080 → 最多 1080 */
-header nav, header .box, header .subject, header .picture{
-    width: 100%; 
-    max-width: 1080px;
-}
-header nav{
-    display: flex;
-    position: relative;
-    margin-top: 65px;
-    top: 50px;
-    justify-content: center;
-    align-items: center;
-}
-    
-header nav input{
-    width: 100%; 
-    max-width: 672px;
-    height: 61.33px;
-    background-color: var(--bg-white-06);
-    border-radius: 24px;
-    padding-left: 56px;
-    padding-right: 24px;
-}
-header nav span{
-    position: relative;
-    z-index: 2;
-    left: -650px;
-}
-header nav input:focus{
-    border: 2px solid var(--color2-bule);
-   
-}
-header nav input:focus+.iconfont{
+header .head a span {
   color: var(--color-bule);
 }
-header .box{
-    display: flex;
-    margin-top: 90px;
-    justify-content: space-between;
-    flex-wrap: wrap; 
-    gap: 20px; 
-    height: auto;
+/* logo 文字左对齐：让 logo 最左边与 content1 卡片的左边缘落在同一条竖线上
+   （原来受 header .head a 的 text-align:center 影响，在 250px 宽里居中，文字被向右缩进约 30px） */
+header .head a.logo {
+  text-align: left;
 }
-header .box .content1{
-    flex: 1 1 620px;
-    min-width: 0; 
-    height: auto;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    background-color: var(--bg-white-05);
-    border-radius: 24px;
-    padding: 32px;
-    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    transform: translateY(0);
-    box-shadow: var(--shadow-medium);
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-    will-change: transform;
+header .nav {
+  width: auto;
+  flex: 1;
+  height: auto;
+  /* 整组靠右：最后一项「成就」的右边缘与右侧卡片 content2 的右边缘落在同一条竖线上
+     （原来 text-align:center 让整组居中，最后一项离卡片右边缘还差约 170px） */
+  text-align: right;
+  line-height: 65px;
+  min-width: 0;
 }
-header .box .content2{
-    flex: 1 1 380px;
-    min-width: 0; 
-    height: auto; 
-    background-color: var(--bg-white-05);
-    border-radius: 24px;
-    padding: 32px;
-    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    transform: scale(1);
-    box-shadow: var(--shadow-medium);
-    -webkit-font-smoothing: antialiased;
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
+header .nav a {
+  width: 28px;
+  height: 28px;
+  color: var(--color-ziti);
+  font-size: 14px;
+  font-weight: 700;
+  /* 每一项之间的等距间距（原 clamp(4px,1.4vw,23px) 偏挤）；≤768px 的 2px 仍由媒体查询覆盖 */
+  margin-left: clamp(14px, 1.7vw, 30px);
+  white-space: nowrap;
 }
-header .box .content1:hover{
-    transform:  scale(1.015);
-    box-shadow: var(--shadow-heavy);
+header .nav a:nth-child(1) {
+  color: var(--color-bule);
 }
-header .box .content2:hover{
-    transform: scale(1.015);
-    box-shadow: var(--shadow-heavy);
+.logo:hover {
+  color: var(--color-bule);
 }
-header .box .content1 .column1{
-    width: 100%;
-    height: 108px;
-    display: flex;
-    gap: 30px;
-    
+.nav .nav1:hover {
+  color: var(--color-bule);
 }
-header .box .content1 .column1 .img{
-    width:  108px;
-    height: 108px;
-    border: 4px solid var(--border-purple);
-    border-radius: 24px;
-    overflow: hidden;
-    transition: all 0.5s;
-    will-change: transform;
+/* ③ 四个 1080 → 最多 1080 */
+header nav,
+header .box,
+header .subject,
+header .picture,
+header .status-bar {
+  width: 100%;
+  max-width: 1080px;
 }
-header .box .content1 .column1 .img img{
-    width: 108px;
-    height: 108px;
-    object-fit: cover;
-    transition: all 0.5s;
-    will-change: transform;
+header nav {
+  display: flex;
+  position: relative;
+  margin-top: 65px;
+  top: 50px;
+  justify-content: center;
+  align-items: center;
 }
-header .box .content1 .column1 .img:hover{
-    transform: rotate(5deg);
+
+header nav input {
+  width: 100%;
+  max-width: 672px;
+  height: 61.33px;
+  background-color: var(--bg-white-06);
+  border-radius: var(--radius-card);   /* rounded-3xl */
+  padding-left: 56px;
+  padding-right: 24px;
 }
-header .box .content1 .column1 .img:hover{
-    transform: rotate(5deg);
+header nav span {
+  position: relative;
+  z-index: 2;
+  left: -650px;
 }
-header .box .content1 .column1 .profile{
-    flex: 1; 
-    min-width: 0;
-    height: 108px;
-} 
-header .box .content1 .column1 .profile h2{
-    font-size: 32px;
-    font-weight: 700;
-    margin-bottom: 8px;
+header nav input:focus {
+  border: 2px solid var(--color2-bule);
 }
-header .box .content1 .column1 .profile P{
-    color: var(--color-font);
+header nav input:focus + .iconfont {
+  color: var(--color-bule);
 }
-header .box .content1 .column2{
-    width: 100%;
-    height: 50px;
-    display: flex;
-    justify-content: space-between;
+header .box {
+  display: flex;
+  margin-top: 90px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+  height: auto;
 }
-header .box .content1 .column2 .count{
-    width: 226px;
-    height: 50px;
-    display: flex;
+header .box .content1 {
+  flex: 1 1 620px;
+  min-width: 0;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background-color: var(--bg-white-06);
+  border-radius: var(--radius-card);   /* rounded-3xl */
+  padding: 32px;
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transform: translateY(0);
+  box-shadow: var(--shadow-medium);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  will-change: transform;
 }
-header .box .content1 .column2 .count a{
-    flex: 1;
-    display: flex;
-    position: relative;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+header .box .content2 {
+  flex: 1 1 380px;
+  min-width: 0;
+  height: auto;
+  background-color: var(--bg-white-06);
+  border-radius: var(--radius-card);   /* rounded-3xl */
+  padding: 32px;
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transform: scale(1);
+  box-shadow: var(--shadow-medium);
+  -webkit-font-smoothing: antialiased;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
-header .box .content1 .column2 .count a::after{
-    position: absolute;
-    content: "";
-    right: 0;
-    width: 0.5px;
-    height: 40px;
-    top: 5px;
-    background-color: var(--bg-white-04);
+header .box .content1:hover {
+  transform: scale(1.015);
+  box-shadow: var(--shadow-heavy);
 }
-header .box .content1 .column2 .count a:first-child span:first-child{
-    font-size: 23px;
-    font-weight: 900;
-    color: var(--color-bule);
-    text-shadow: var(--glow-blue);
+header .box .content2:hover {
+  transform: scale(1.015);
+  box-shadow: var(--shadow-heavy);
 }
-header .box .content1 .column2 .count a span:last-child{
-    color:var(--color-font);
-    font-size: 10px;
+header .box .content1 .column1 {
+  width: 100%;
+  height: 108px;
+  display: flex;
+  gap: 30px;
 }
-header .box .content1 .column2 .count a:nth-child(2) span:first-child{
-    font-size: 23px;
-    font-weight: 900;
-    color: var(--color2-bule);
-    text-shadow: var(--glow-blue);
+header .box .content1 .column1 .img {
+  width: 108px;
+  height: 108px;
+  border: 4px solid var(--border-purple);
+  border-radius: var(--radius-card);   /* rounded-3xl */
+  overflow: hidden;
+  transition: all 0.5s;
+  will-change: transform;
 }
-header .box .content1 .column2 .count a:nth-child(3) span:first-child{
-    font-size: 23px;
-    font-weight: 900;
-    color: var(--color2-font);
-    text-shadow: var(--glow-blue);
+header .box .content1 .column1 .img img {
+  width: 108px;
+  height: 108px;
+  object-fit: cover;
+  transition: all 0.5s;
+  will-change: transform;
 }
-header .box .content1 .column2 .count a span:first-child:hover{
-    scale: calc(1.2);
+header .box .content1 .column1 .img:hover {
+  transform: rotate(5deg);
 }
-header .box .content1 .column2 .count a span:first-child{
-    transition: all 0.2s;
+header .box .content1 .column1 .img:hover {
+  transform: rotate(5deg);
 }
-header .box .content1 .column2 .login{
-    width: 305px;
-    height: 40.4px;
-    display: flex;
-    gap: 12.12px;
-    margin-top: 5px;
+header .box .content1 .column1 .profile {
+  flex: 1;
+  min-width: 0;
+  height: 108px;
 }
-header .box .content1 .column2 .login a{
-    width: 40.4px;
-    height: 100%;
-    background-color: var(--bg-white-05);
-    border-radius: 12px;
-    text-align: center;
-    line-height: 40.4px;
+header .box .content1 .column1 .profile h2 {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--color-ziti);   /* 原来没写 color → 继承浏览器默认黑，深色模式下不会变白 */
 }
-header .box .content1 .column2 .login a span{
-    color: var(--color-font);
-    font-weight: 400;
-    font-size: 20px;
+header .box .content1 .column1 .profile P {
+  color: var(--color-font);
 }
-header .box .content1 .column2 .login a:hover{
-    background-color: var(--color-bule);
+header .box .content1 .column2 {
+  width: 100%;
+  height: 50px;
+  display: flex;
+  justify-content: space-between;
 }
-header .box .content1 .column2 .login a:hover span{
-    color: var(--text-white);
+header .box .content1 .column2 .count {
+  width: 226px;
+  height: 50px;
+  display: flex;
 }
-header .box .content2 .song{
+header .box .content1 .column2 .count a {
+  flex: 1;
+  display: flex;
+  position: relative;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+header .box .content1 .column2 .count a::after {
+  position: absolute;
+  content: "";
+  right: 0;
+  width: 0.5px;
+  height: 40px;
+  top: 5px;
+  background-color: var(--bg-white-04);
+}
+header .box .content1 .column2 .count a:first-child span:first-child {
+  font-size: 23px;
+  font-weight: 900;
+  color: var(--color-bule);
+  text-shadow: var(--glow-blue);
+}
+header .box .content1 .column2 .count a span:last-child {
+  color: var(--color-font);
+  font-size: 10px;
+}
+header .box .content1 .column2 .count a:nth-child(2) span:first-child {
+  font-size: 23px;
+  font-weight: 900;
+  color: var(--color2-bule);
+  text-shadow: var(--glow-blue);
+}
+header .box .content1 .column2 .count a:nth-child(3) span:first-child {
+  font-size: 23px;
+  font-weight: 900;
+  color: var(--color2-font);
+  text-shadow: var(--glow-blue);
+}
+header .box .content1 .column2 .count a span:first-child:hover {
+  scale: calc(1.2);
+}
+header .box .content1 .column2 .count a span:first-child {
+  transition: all 0.2s;
+}
+header .box .content1 .column2 .login {
+  width: 305px;
+  height: 40.4px;
+  display: flex;
+  gap: 12.12px;
+  margin-top: 5px;
+}
+header .box .content1 .column2 .login a {
+  width: 40.4px;
+  height: 100%;
+  background-color: var(--bg-white-05);
+  border-radius: var(--radius-md);   /* rounded-xl */
+  text-align: center;
+  line-height: 40.4px;
+}
+header .box .content1 .column2 .login a span {
+  color: var(--color-font);
+  font-weight: 400;
+  font-size: 20px;
+}
+header .box .content1 .column2 .login a:hover {
+  background-color: var(--color-bule);
+}
+header .box .content1 .column2 .login a:hover span {
+  color: var(--text-white);
+}
+header .box .content2 .song {
   width: 100%;
   height: 85.15px;
   display: flex;
   gap: 18px;
 }
-header .box .content2 .song img{
-    width: 83px;
-    height: 83px;
-    object-fit: cover;
-    border-radius: 50%;
-    vertical-align: middle;
+header .box .content2 .song img {
+  width: 83px;
+  height: 83px;
+  object-fit: cover;
+  border-radius: 50%;
+  vertical-align: middle;
 }
-header .box .content2 .song .media-name{
-    display: flex;
-    flex: 1; 
-    min-width: 0;
-    height: 100%; 
-    flex-direction: column;
-    gap: 2px;
-    
+header .box .content2 .song .media-name {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  flex-direction: column;
+  gap: 2px;
 }
-header .box .content2 .song .media-name div{
-    width: 105px;
-    height: 18px;
-    background-color: var(--bg-white-06);
-    font-size: 10px;
-    text-align: center;
-    line-height: 18px;
-    color: var(--color-bule);
-    font-weight: 700;
-    border-radius: 5px;
-    box-shadow: var(--shadow-media);
+header .box .content2 .song .media-name div {
+  width: 105px;
+  height: 18px;
+  background-color: var(--bg-white-06);
+  font-size: 10px;
+  text-align: center;
+  line-height: 18px;
+  color: var(--color-bule);
+  font-weight: 700;
+  border-radius: var(--radius-2xs);
+  box-shadow: var(--shadow-media);
 }
-header .box .content2 .song .media-name h2{
-    font-size: 21px;
-}    
-header .box .content2 .song .media-name span{
-    font-size: 13px;
-    color: var(--color-font);
-    font-weight: 400;
+header .box .content2 .song .media-name h2 {
+  font-size: 21px;
+  color: var(--color-ziti);   /* 同上：补上可翻转的文字色，深色模式变白 */
 }
-header .box .content2  p{
-     font-size: 12px;
-     color: var(--color-bule);
-     font-weight: 600;
-     margin: 20px;
-     margin-left: 0px;
+header .box .content2 .song .media-name span {
+  font-size: 13px;
+  color: var(--color-font);
+  font-weight: 400;
 }
-header .box .content2 .timeline{
-    width: 100%;
-    height: 16px;
-    display: flex;
-    gap: 12px;
-    align-items: center;
+header .box .content2 p {
+  font-size: 12px;
+  color: var(--color-bule);
+  font-weight: 600;
+  margin: 20px;
+  margin-left: 0px;
 }
-header .box .content2 .timeline span{
-    color: var(--color-font);
-    font-size: 12px;
-    font-weight: 700;
+header .box .content2 .timeline {
+  width: 100%;
+  height: 16px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
 }
-header .box .content2 .timeline div{
-    flex: 1;
-    height: 6px;
-    position: relative;
-    background-color: var(--bg-progress);
-    border-radius: 24px;
-    
-
+header .box .content2 .timeline span {
+  color: var(--color-font);
+  font-size: 12px;
+  font-weight: 700;
 }
-header .box .content2 .timeline div span{
-    display: inline-block;
-    position: absolute;
-    top: 0;
-    background-color: var(--color-bule);
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
+header .box .content2 .timeline div {
+  flex: 1;
+  height: 6px;
+  position: relative;
+  background-color: var(--bg-progress);
+  border-radius: 24px;
 }
-header .box .content2 .control{
-    display: flex;
-    width: 100%;
-    height: 90px;
-    gap: 23px;
-    justify-content: center;
-    align-items: center;
+header .box .content2 .timeline div span {
+  display: inline-block;
+  position: absolute;
+  top: 0;
+  background-color: var(--color-bule);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
 }
-header .box .content2 .control span{
-    color: var(--text-black-08);
-    font-size: 20px;
-    font-weight: 400;
+header .box .content2 .control {
+  display: flex;
+  width: 100%;
+  height: 90px;
+  gap: 23px;
+  justify-content: center;
+  align-items: center;
 }
-header .box .content2 .control span:hover{
-    cursor: pointer;
+header .box .content2 .control span {
+  color: var(--text-black-08);
+  font-size: 20px;
+  font-weight: 400;
 }
-header .box .content2 .control div{
+header .box .content2 .control span:hover {
+  cursor: pointer;
+}
+header .box .content2 .control div {
   width: 45px;
   height: 45px;
   display: flex;
@@ -392,359 +429,741 @@ header .box .content2 .control div{
   transition: all 0.5s;
   display: flex;
 }
-header .box .content2 .control div span{
-    font-size: 12px;
-    color: var(--text-white);
+header .box .content2 .control div span {
+  font-size: 12px;
+  color: var(--text-white);
 }
-header .box .content2 .control div:hover{
-    scale: calc(1.15);
-    background-color: var(--color-bule);
-    cursor: pointer;
+header .box .content2 .control div:hover {
+  scale: calc(1.15);
+  background-color: var(--color-bule);
+  cursor: pointer;
 }
 @keyframes rotate {
-    0%{transform: rotate(0deg);}
-    100%{transform: rotate(360deg);}
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
-header .box .content2:hover .song img{
-    animation: rotate 8s infinite linear;
+header .box .content2:hover .song img {
+  animation: rotate 8s infinite linear;
 }
-header .subject{
-    height: 80px;
-    background-color: var(--bg-dark-purple);
-    border-radius: 24px;
-    margin-top: 15px;
-    text-align: center;
-    line-height: 80px;
-    color: var(--text-white);
-    font-weight: 700;
-    font-size: 20px;
+header .subject {
+  height: 80px;
+  background-color: var(--bg-dark-purple);
+  border-radius: var(--radius-card);   /* rounded-3xl */
+  margin-top: 15px;
+  text-align: center;
+  line-height: 80px;
+  color: var(--text-white);
+  font-weight: 700;
+  font-size: 20px;
 }
 @keyframes appear {
-    0%{opacity: 0;}
-    15%{opacity: 1;}
-    45%{opacity: 1;}
-    65%{opacity: 0;}
-    100%{opacity: 0;}
-}
-header .subject span{
+  0% {
     opacity: 0;
-    transition: all 0.5s;
+  }
+  15% {
+    opacity: 1;
+  }
+  45% {
+    opacity: 1;
+  }
+  65% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
 }
-header .subject span:nth-child(1){
+header .subject span {
+  opacity: 0;
+  transition: all 0.5s;
+}
+header .subject span:nth-child(1) {
   animation: appear 6s infinite ease-in-out;
 }
-header .subject span:nth-child(2){
-    animation: appear 6s 0.3s infinite ease-in-out;
+header .subject span:nth-child(2) {
+  animation: appear 6s 0.3s infinite ease-in-out;
 }
-header .subject span:nth-child(3){
-    animation: appear 6s 0.6s infinite ease-in-out;
+header .subject span:nth-child(3) {
+  animation: appear 6s 0.6s infinite ease-in-out;
 }
-header .subject span:nth-child(4){
-    animation: appear 6s 0.9s infinite ease-in-out;
+header .subject span:nth-child(4) {
+  animation: appear 6s 0.9s infinite ease-in-out;
 }
-header .subject span:nth-child(5){
-    animation: appear 6s 1.2s infinite ease-in-out;
+header .subject span:nth-child(5) {
+  animation: appear 6s 1.2s infinite ease-in-out;
 }
-header .subject span:nth-child(6){
-    animation: appear 6s 1.5s infinite ease-in-out;
+header .subject span:nth-child(6) {
+  animation: appear 6s 1.5s infinite ease-in-out;
 }
-header .picture{
-    height: 600px;
-    display: grid;
-    margin-top: 20px;
-    gap: 23px;
-    grid-template-columns: repeat(5, 1fr);/* 基准层：拼图是按 5 列设计的 */
-    transform: translateZ(0);
-    will-change: transform, opacity;
-}  
+/* =========================================================
+   照片墙（原站「封面图片卡」的原生 CSS 版）
+   ---------------------------------------------------------
+   除图片内容外，其余都按原站那串工具类还原：
+     rounded-2xl + overflow-hidden + border border-white/40
+     + backdrop-blur-md + shadow-xl …… 见下面 li div（玻璃层走 .card-glass）
+     group-hover:scale-105 ……………… 悬停时图片在卡内放大
+     bg-gradient-to-t from-black/90 via-black/30 ……… ::after 遮罩
+       （以后要加的 p 文字就压在这层遮罩上面，所以底层故意留得比较深）
+   下面这些变量就是本块的「调节旋钮」，想再暗/再亮只改数字，不用翻规则：
+   ========================================================= */
+header .picture {
+  --photo-dim: 0.9;          /* 手移开：整体变暗（原来 0.85 压得图发闷，调回来一点） */
+  --photo-sat-dim: 0.96;     /* 手移开：饱和度也压一点点 */
+  --photo-lit: 1.07;         /* 鼠标悬停：变亮 */
+  --photo-sat-lit: 1.05;     /* 鼠标悬停：稍微提一点饱和 */
+  --photo-zoom: 1.05;        /* 鼠标悬停：图片略微放大（原站 group-hover:scale-105） */
+  --photo-card-zoom: 1.01;   /* 鼠标悬停：整格再轻轻抬一下（原站 hover:scale-[1.01]） */
+  --photo-veil-dim: 0.7;     /* 手移开：底部渐变遮罩的浓度（原来 0.85 太黑，像盖了层布） */
+  --photo-veil-lit: 0.25;    /* 悬停：遮罩淡下去，图就“亮”了 */
+  --photo-veil: linear-gradient(to top, rgba(0, 0, 0, .85), rgba(0, 0, 0, .25) 45%, transparent); /* 原站 .card--cover .veil */
+  --photo-fade: 600ms;       /* 切图淡入淡出的时长（进度点换图用的就是它） */
+
+  height: 600px;
+  display: grid;
+  margin-top: 20px;
+  gap: 23px;
+  grid-template-columns: repeat(5, 1fr); /* 基准层：拼图是按 5 列设计的 */
+  transform: translateZ(0);
+  will-change: transform, opacity;
+}
 /* 第一个格子：跨两列，跨两行 */
 header .picture li:first-child {
-    grid-column: span 2; 
-    grid-row: span 2;
+  grid-column: span 2;
+  grid-row: span 2;
 }
 /* 第二个格子：跨三列（因为第一行剩余了 3 列空间） */
 header .picture li:nth-child(2) {
-    grid-column: span 3;
-    grid-row: span 1;
+  grid-column: span 3;
+  grid-row: span 1;
 }
 /* 第三个格子：跨两列 */
 header .picture li:nth-child(3) {
-    grid-column: span 2;
-    grid-row: span 1;
+  grid-column: span 2;
+  grid-row: span 1;
 }
-/* 第四个格子（就是你的夜间模式按钮）：占据剩下的 1 列 */
+/* 第四个格子（原站那张「夜间模式」翻转圆盘卡）：占据剩下的 1 列 */
 header .picture li:nth-child(4) {
-    grid-column: span 1;
-    grid-row: span 1;
+  grid-column: span 1;
+  grid-row: span 1;
 }
-header .picture li div{
-    width: 100%;
-    height: 100%;
-    position: relative;
-    border-radius: 16px;
-    background-color: var(--bg-white-06);
-    overflow: hidden;
-    box-shadow: var(--shadow-card);
+header .picture li div {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  border-radius: var(--radius-lg);   /* rounded-2xl */
+  background-color: var(--bg-white-06);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+  transform: scale(1);
+  transition: transform var(--dur) ease;   /* 悬停时整格轻抬，见下面 @media (hover:hover) */
 }
+/* 底部渐变遮罩：照搬原站 .card--cover .veil（from-black/90 via-black/30）
+   平时浓一点（移开鼠标 = 变暗），悬停淡下去（= 变亮）；
+   以后要加的那行 p 文字直接压在这层上面就行（给它 z-index:3） */
 header .picture li div::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 55%;
-    background: var(--gradient-dark);
-    pointer-events: none;
-    z-index: 2;
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 55%;
+  background: var(--photo-veil);
+  opacity: var(--photo-veil-dim);
+  transition: opacity var(--dur) ease;
+  pointer-events: none;
+  z-index: 2;
 }
-header .picture li:nth-child(4) div::after{
-    content: "";
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 55%;
-    background: transparent;
-    pointer-events: none;
-    z-index: 2;
+/* 第四个格子 = 原站那张「夜间模式」翻转圆盘卡
+   ---------------------------------------------------------
+   结构/外观照搬 card.css 第 5 节（= xhs卡片示例.html / card-demo.html 的原站卡）：
+     圆盘 .moon 上下两层渐变互相推、emoji 同时 rotate+scale 淡入；
+     切换只看 <html data-theme="dark">，所以这里不需要写任何动画关键帧。
+   这里只做两件原站没有的事：
+     ① 把 `header .picture li div`（后代选择器）压到圆盘上的尺寸/背景/阴影还原回来
+        —— 和右下角进度点那次同一个坑：圆盘本身也是 div，会被撑成整格；
+     ② 文字颜色改用项目令牌（--color-ziti / --color-font），深色模式自动翻转。 */
+header .picture li:nth-child(4) > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  cursor: pointer;                        /* 原站这张卡整块可点 */
 }
-header .picture li:nth-child(4) div button{
+/* 照片卡那层底部黑渐变遮罩：第四个格子整块（连圆盘那个 div）都不要 */
+header .picture li:nth-child(4) div::after {
+  content: none;
+}
+/* 圆盘：尺寸/圆角回到 card.css 的 .moon（80px 圆） */
+header .picture li:nth-child(4) .moon {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  margin: 0 auto;
+  border-radius: var(--radius-pill);      /* rounded-full */
+  overflow: hidden;                       /* 两层渐变滑进滑出时裁成圆 */
+  background-color: transparent;          /* 别吃上面 `li div` 那条的 --bg-white-06 */
+  box-shadow: var(--shadow-inset);        /* shadow-inner */
+  transform: none;                        /* 上面那条的 scale(1) 不要（悬停抬升归卡片那层） */
+  flex: 0 0 auto;
+}
+/* ⚠ 方向覆盖：card.css 第 5 节是「浅色态显示 🌙 + 深紫盘」，那是原站"预告点一下会切到夜"的写法。
+   本页要的是「卡面 = 当前所处模式」，所以把两层渐变和 emoji 的推入方向整体反过来：
+     浅色（日间）→ ☀️ + 蓝天黄盘 ；深色（夜间）→ 🌙 + 深紫盘
+   card.css / xhs卡片示例.html 保持原样不动，这里只覆盖本页那一个格子；
+   带上 `header .picture li:nth-child(4)` 后权重是 (0,4,3) / 深色态 (0,5,3)，
+   稳过 card.css 的 `.moon i.day` (0,2,1)，不靠 !important。 */
+header .picture li:nth-child(4) .moon i.day   { transform: translateY(0); }
+header .picture li:nth-child(4) .moon i.night { transform: translateY(100%); }
+header .picture li:nth-child(4) .moon em.day  { opacity: 1; transform: translate(-50%, -50%) rotate(0) scale(1); }
+header .picture li:nth-child(4) .moon em.night{ opacity: 0; transform: translate(-50%, -50%) rotate(90deg) scale(.5); }
+[data-theme="dark"] header .picture li:nth-child(4) .moon i.day   { transform: translateY(-100%); }
+[data-theme="dark"] header .picture li:nth-child(4) .moon i.night { transform: translateY(0); }
+[data-theme="dark"] header .picture li:nth-child(4) .moon em.day  { opacity: 0; transform: translate(-50%, -50%) rotate(90deg) scale(.5); }
+[data-theme="dark"] header .picture li:nth-child(4) .moon em.night{ opacity: 1; transform: translate(-50%, -50%) rotate(0) scale(1); }
+/* 卡片文字：原站是 h3 20px / p 14px 的行内样式，这里换成能跟着主题翻转的令牌色
+   （文案内容由 render.js 换，语义是「卡面 = 当前所处模式」：
+     浅色态「日间模式 / 晨光熹微」+ ☀️，深色态「夜间模式 / 更阑人静」+ 🌙） */
+header .picture li:nth-child(4) .theme-title {
+  margin: 12px 0 0;                       /* 原站 h3 的 margin:12px 0 0 */
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-ziti);
+  transition: color var(--dur) ease;
+}
+header .picture li:nth-child(4) .theme-sub {
+  margin: 4px 0 0;                        /* 原站 p 的 margin:4px 0 0 */
+  font-size: 14px;
+  color: var(--color-font);
+  transition: color var(--dur) ease;
+}
+/* 原站那张卡是 role="button" + tabindex="0"，键盘 Tab 过来要看得见焦点 */
+header .picture li:nth-child(4) > div:focus-visible {
+  outline: 2px solid var(--color2-bule);
+  outline-offset: 2px;
+}
+/* 图片本体：原站 .card--cover .cover（absolute inset-0 object-cover opacity-90）
+   默认变暗；由 render.js 加 .is-active 决定显示哪张（淡入淡出在 CSS 里） */
+header .picture li div img {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  inset: 0;
+  display: block;
+  object-fit: cover;                    /* object-cover */
+  opacity: 0;
+  filter: brightness(var(--photo-dim)) saturate(var(--photo-sat-dim));
+  transform: scale(1) translateZ(0);
+  transform-origin: center;
+  transition: opacity var(--photo-fade) ease,
+              filter var(--dur) ease,
+              transform var(--dur) ease;
+  backface-visibility: hidden;
+  will-change: opacity, transform, filter;
+}
+/* 谁带 .is-active 谁显示（render.js 里每格各有一个 5s 定时器，或由这一格右下角的进度点点击决定） */
+header .picture li div img.is-active {
+  opacity: 1;
+}
+/* 没有 JS 时的兜底：一个 .is-active 都没有就先显示第一张
+   （浏览器不支持 :has() 时这条会被丢掉，不影响 JS 正常切图） */
+header .picture li div:not(:has(img.is-active)) img:nth-child(1) {
+  opacity: 1;
+}
+/* 鼠标悬停：略微放大 + 变亮；移开 → 回到上面的暗状态
+   用 (hover:hover) 包住：触屏设备不会因为"点一下"卡在悬停态 */
+@media (hover: hover) and (pointer: fine) {
+  /* 注意这里都带 > ：只让「真正那一格照片」响应悬停。
+     不带 > 的话，鼠标移到右下角进度点上时，进度点那个盒子自己也会被放大 */
+  header .picture li > div:hover {
+    transform: scale(var(--photo-card-zoom));            /* 整格轻抬，原站 hover:scale-[1.01] */
+  }
+  header .picture li > div:hover img.is-active {
+    filter: brightness(var(--photo-lit)) saturate(var(--photo-sat-lit));
+    transform: scale(var(--photo-zoom)) translateZ(0);   /* 略微放大，原站 group-hover:scale-105 */
+  }
+  header .picture li > div:hover::after {
+    opacity: var(--photo-veil-lit);                      /* 遮罩淡下去 = 图变亮 */
+  }
+}
+
+/* 右下角进度点（render.js 生成；点它=切图，自动播放也是"点"它）
+   ---------------------------------------------------------
+   外观照原站：外面不套任何底色 / 描边，几个小指示条直接压在图上；
+     未选中 = 小椭圆（比圆点略长一点）
+     选中   = 高度更低的胶囊（两边都是圆角的长方形）
+   原来的深色小胶囊（rgba(17,24,60,.45) + 1px 描边 + blur）已按原站写法改成透明。 */
+header .picture li > div .picture-dots {
+  position: absolute;
+  /* ↓↓↓ 这 6 行是「必须」的：
+     本文件上面的 header .picture li div（后代选择器，没有 >）会把 li 里面
+     「所有后代 div」都选中——进度点这个盒子自己也是个 div，于是会吃到
+     width:100%; height:100% 被撑满整格；再叠上它自带的那层效果，
+     就变成一块盖住照片的遮罩，点还被 flex 挤到左侧垂直居中。
+     这里显式还原成 auto，把盒子收回到右下角。 */
+  left: auto;
+  top: auto;
+  width: auto;
+  height: auto;
+  transform: none;                     /* 同上：那条规则带了 transform: scale(1) */
+  box-shadow: none;                    /* 同上：那条规则带了 shadow-card */
+  overflow: visible;
+  right: 14px;
+  bottom: 14px;
+  z-index: 5;                          /* 高于遮罩的 z-index:2，才点得到 */
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 9px;                     /* 底色透明之后，这圈留白只剩"好点一些"的作用 */
+  border-radius: var(--radius-pill);
+  background: transparent;              /* 原站没有那层深色小胶囊 → 透明 */
+  border: 0;                            /* 也不描边 */
+  /* 原来这里的 -webkit-backdrop-filter / backdrop-filter: blur(8px) 跟着撤掉了：
+     底色一透明，那圈模糊就变成一块看得见的"糊斑"，等于又画了一层胶囊 */
+}
+/* 那个 header .picture li div::after 也会给这个盒子塞一层渐变遮罩，关掉它 */
+header .picture li > div .picture-dots::before,
+header .picture li > div .picture-dots::after {
+  content: none;
+}
+/* 进度条配色对齐 content2 播放器：紫（--color2-bule）＋蓝（--color-bule） */
+header .picture li > div .picture-dot {
+  width: 10px;                          /* 未选中：小椭圆 —— 比原来的 8px 圆点"长度长一点" */
+  height: 7px;                          /* 高度略低于直径，看着就是一枚小椭圆 */
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background-color: var(--color2-bule); /* 播放器那个紫（这里必须写 background-color：
+                                           background 简写 + lab() 颜色会被判为无效 → 透明） */
+  opacity: .5;
+  cursor: pointer;
+  /* 没有底色托着了，靠一层很淡的暗描边保证压在图上也看得见 */
+  box-shadow: 0 0 3px rgba(0, 0, 0, .35);
+  transition: width var(--dur) ease, height var(--dur) ease,
+              opacity var(--dur) ease, box-shadow var(--dur) ease;
+}
+header .picture li > div .picture-dot:hover {
+  opacity: 1;
+}
+header .picture li > div .picture-dot.is-on { /* 当前这张：高度更低的胶囊（= 两边圆角的长方形），紫→蓝渐变 */
+  width: 22px;
+  height: 6px;
+  opacity: 1;
+  background: linear-gradient(90deg, var(--color2-bule), var(--color-bule));
+  box-shadow: 0 0 8px var(--color2-bule);       /* 播放器那种蓝紫发光 */
+}
+
+/* 原来这里是「@keyframes change + 9 条 animation-delay」的纯 CSS 自动轮播：
+   现在换图的主动权交给了 render.js / 右下角进度点，CSS 只负责 .is-active 的淡入淡出，
+   所以这整段动画已删除（想退回纯 CSS 轮播，从 git 历史里把这段捞回来即可）。 */
+@media (max-width: 768px) {
+  body {
+    overflow-x: visible;
+  }
+  /* 2. 强制让所有 1080px 的容器宽度，变成 100% 自适应 */
+  header .head,
+  header nav,
+  header .box,
+  header .subject,
+  header .picture {
     width: 100%;
-    height: 100%;
-    display: inline-block;
+    padding-left: 15px; /* 给两边留一点安全距离 */
+    padding-right: 15px;
+    box-sizing: border-box;
+  }
+  header .head {
+    padding-left: 12px; /* 把 300px 改成 15px */
+    padding-right: 12px;
+  }
+  header .head a {
+    width: 50%; /* 去掉原来写死的 250px 宽度 */
+    font-size: 10px; /* 字号稍微调小一点 */
+  }
+  header .box {
+    width: 100%;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    margin-top: 30px;
+    gap: 15px;
+  }
+  header nav {
+    display: flex;
     position: relative;
-    background-color: var(--bg-white-04);
-    cursor: pointer;
-}
-header .picture li:nth-child(4) div button .bg-toggle{
+    margin-top: 15px;
+    top: 0px;
+    justify-content: center;
+    align-items: center;
+  }
+  header nav input {
+    width: 100%;
+    height: auto; /* 搜索框自适应 */
+    padding-left: 40px; /* 调整左边距 */
+    padding-right: 15px;
+    box-sizing: border-box;
+  }
+  header nav span {
     position: absolute;
-    z-index: 2;
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    border: 1px solid var(--color-font);
-    top: 10px;
-    right:24px;
-    line-height: 150px;
-    background-color: var(--color2-bule);
-}
-header .picture li:nth-child(4) div button .bg-toggle .iconfont{
-    font-size: 64px;
-    color: var(--color-font);
-    font-weight: 400;
-}
-header .picture li:nth-child(4) div button p{
-    width: 150px;
-    text-align: center;
-    position: absolute;
-    z-index: 2;
-    bottom: 40px;
-    right: 24px;
-    font-size: 23px;
-    font-weight: 700;
-    color: var(--color-font);
-}
-header .picture li div img{
+    left: 14px;
+    font-size: 16px; /* 把现在那条 font-size:2px 删掉，那是白写的 */
+  }
+  header .nav {
+    width: 100%;
+    height: auto;
+    line-height: 40px; /* 减小行高 */
+    display: flex;
+    flex-wrap: nowrap; /* 强制不换行 */
+    justify-content: flex-end; /* 靠左对齐 */
+    overflow-x: auto; /* 如果放不下，允许内部横向滚动 */
+  }
+  header .nav a {
+    margin-left: 2px; /* 把电脑端的 23px 缩小 */
+    font-size: 8px; /* 把字号从 14px 缩小 */
+    white-space: nowrap; /* 文字本身不换行 */
+  }
+  header .box .content1,
+  header .box .content2 {
+    width: 100%;
+    flex: 0 0 auto; /* 强制从 640px / 410px 变成全宽 */
+    height: auto;
+    padding: 15px;
+    font-size: 12px;
+    box-sizing: border-box;
+  }
+  header .box .content1 .column1,
+  header .box .content1 .column2 {
+    width: 100%;
+    height: auto;
+  }
+  header .box .content1 .column1 {
+    gap: 12px;
+    align-items: center;
+  }
+  header .box .content1 .column1 .img {
+    width: 56px;
+    height: 56px;
+    flex: 0 0 56px; /* 盖掉 20%，别用百分比 */
+  }
+  header .box .content1 .column1 .img img {
     width: 100%;
     height: 100%;
-    position: absolute;
-    object-fit: cover;
-    animation: change 15s infinite;
-    transition: all 0.5s;
-    transform: translateZ(0);
-    will-change: opacity;
-}
-
-header .picture li:nth-child(1) div img:nth-child(1){
-    animation-delay: 0s;
-}
-header .picture li:nth-child(1) div img:nth-child(2){
-    animation-delay: 5s;
-}
-header .picture li:nth-child(1) div img:nth-child(3){
-    animation-delay: 10s;
-}
-header .picture li:nth-child(2) div img:nth-child(1){
-    animation-delay: 1.5s;
-}
-header .picture li:nth-child(2) div img:nth-child(2){
-    animation-delay: 6.5s;
-}
-header .picture li:nth-child(2) div img:nth-child(3){
-    animation-delay: 11.5s;
-}
-header .picture li:nth-child(3) div img:nth-child(1){
-    animation-delay: 3s;
-}
-header .picture li:nth-child(3) div img:nth-child(2){
-    animation-delay: 8s;
-}
-header .picture li:nth-child(3) div img:nth-child(3){
-    animation-delay: 13s;
-}
-@keyframes change {
-    0%, 26%   { opacity: 1; }   
-    33%       { opacity: 0; }   
-    100%      { opacity: 0; }           
-}
-@media(max-width: 768px) {
-    body{
-      overflow-x: visible;  
-    }
-     /* 2. 强制让所有 1080px 的容器宽度，变成 100% 自适应 */
-    header .head, 
-    header nav, 
-    header .box, 
-    header .subject, 
-    header .picture {
-        width: 100%;
-        padding-left: 15px;   /* 给两边留一点安全距离 */
-        padding-right: 15px;
-        box-sizing: border-box;
-    }
-    header .head {
-        padding-left: 12px;   /* 把 300px 改成 15px */
-        padding-right: 12px;
-    }
-    header .head a {
-        width: 50%;          /* 去掉原来写死的 250px 宽度 */
-        font-size: 10px;      /* 字号稍微调小一点 */
-    }
-    header .box{
-        width: 100%;
-        height: auto;
-        display: flex;
-        flex-direction: column;
-        margin-top: 30px;
-        gap: 15px;         
-
-    }
-    header nav{
-        display: flex;
-        position: relative;
-        margin-top: 15px;
-        top: 0px;
-        justify-content: center;
-        align-items: center;
-    }
-    header nav input {
-        width: 100%;
-        height: auto;            /* 搜索框自适应 */
-        padding-left: 40px;      /* 调整左边距 */
-        padding-right: 15px;
-        box-sizing: border-box;
-    }
-    header nav span{
-        position: absolute;
-        left: 14px;
-        font-size: 16px;          /* 把现在那条 font-size:2px 删掉，那是白写的 */
-    }
-    header .nav {
-        width: 100%;
-        height: auto;
-        line-height: 40px; /* 减小行高 */
-        display: flex;
-        flex-wrap: nowrap; /* 强制不换行 */
-        justify-content: flex-end; /* 靠左对齐 */
-        overflow-x: auto; /* 如果放不下，允许内部横向滚动 */     
-    }
-    header .nav a {
-        margin-left: 2px; /* 把电脑端的 23px 缩小 */
-        font-size: 8px;  /* 把字号从 14px 缩小 */
-        white-space: nowrap; /* 文字本身不换行 */
-    }
-    header .box .content1,
-    header .box .content2 {
-        width: 100%; 
-        flex: 0 0 auto;         /* 强制从 640px / 410px 变成全宽 */
-        height: auto;         
-        padding: 15px;
-        font-size: 12px;        
-        box-sizing: border-box; 
-    }
-    header .box .content1 .column1,
-    header .box .content1 .column2 {
-        width: 100%;
-        height: auto;            
-    }
-    header .box .content1 .column1{ 
-        gap: 12px; 
-        align-items: center; 
-    }
-    header .box .content1 .column1 .img{
-        width: 56px; 
-        height: 56px; 
-        flex: 0 0 56px;   /* 盖掉 20%，别用百分比 */
-    }
-    header .box .content1 .column1 .img img{ 
-        width: 100%; 
-        height: 100%; 
-    }  /* ← 关键，现在漏了 */
-    header .box .content1 .column1 .profile{ 
-        width: auto; 
-        flex: 1; 
-        min-width: 0; 
-    }
-    header .box .content1 .column1 .profile h2{ 
-        font-size: 22px; 
-    }
-    header .box .content1 .column2 .count a:first-child span:first-child{ 
-        font-size: 18px; 
-    }
-    header .head{ 
-        position: static; 
-    }   /* 手机上不要固定头，65px 的账就不用算了 */
-    header .box .content1 .column2{
-        flex-wrap: wrap;          /* 允许换行，531 就有地方去 */
-        height: auto;
-        gap: 10px;
-    }
-    header .box .content1 .column2 .count{ 
-        width: 100%; 
-    }   /* 计数：独占一行 */
-    header .box .content1 .column2 .login{
-        width: 100%;              /* 图标：独占一行 */
-        gap: 8px;
-        margin-top: 0;
-    }
-    header .box .content1 .column2 .login a{ 
-        width: auto; 
-        flex: 1; 
-    }  /* 6 个图标均分 315 */
-    header .box .content2 .timeline{
-        width: 100%;
-    }
-    /* 1. 网格改为单列 */
-    header .picture{    
-        height: auto;
-    }
-    /* 2. 取消手机端所有特殊的跨列规则 */
-    header .picture li:first-child,
-    header .picture li:nth-child(2),
-    header .picture li:nth-child(3),
-    header .picture li:nth-child(4) {
-        grid-column: auto; 
-        grid-row: auto;     
-    }
-    header .picture{ 
-        grid-template-columns: repeat(2, 1fr); 
-    }
-    header .picture li div {
-        height: 200px; 
-    }
+  } /* ← 关键，现在漏了 */
+  header .box .content1 .column1 .profile {
+    width: auto;
+    flex: 1;
+    min-width: 0;
+  }
+  header .box .content1 .column1 .profile h2 {
+    font-size: 22px;
+  }
+  header .box .content1 .column2 .count a:first-child span:first-child {
+    font-size: 18px;
+  }
+  header .head {
+    position: static;
+  } /* 手机上不要固定头，65px 的账就不用算了 */
+  header .box .content1 .column2 {
+    flex-wrap: wrap; /* 允许换行，531 就有地方去 */
+    height: auto;
+    gap: 10px;
+  }
+  header .box .content1 .column2 .count {
+    width: 100%;
+  } /* 计数：独占一行 */
+  header .box .content1 .column2 .login {
+    width: 100%; /* 图标：独占一行 */
+    gap: 8px;
+    margin-top: 0;
+  }
+  header .box .content1 .column2 .login a {
+    width: auto;
+    flex: 1;
+  } /* 6 个图标均分 315 */
+  header .box .content2 .timeline {
+    width: 100%;
+  }
+  /* 1. 网格改为单列 */
+  header .picture {
+    height: auto;
+  }
+  /* 2. 取消手机端所有特殊的跨列规则 */
+  header .picture li:first-child,
+  header .picture li:nth-child(2),
+  header .picture li:nth-child(3),
+  header .picture li:nth-child(4) {
+    grid-column: auto;
+    grid-row: auto;
+  }
+  header .picture {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  header .picture li div {
+    height: 200px;
+  }
 }
 /* ≤480：这才是这个页面真正需要的"第二个断点" */
-@media (max-width: 480px){
-  header .picture{ 
-    grid-template-columns: 1fr; 
-}
-  header .picture li:nth-child(4) div button .bg-toggle{
-      width: 72px; height: 72px; line-height: 72px; top: 10px; right: 10px;
+@media (max-width: 480px) {
+  header .picture {
+    grid-template-columns: 1fr;
   }
-  header .picture li:nth-child(4) div button .bg-toggle .iconfont{ 
-    font-size: 30px; 
+  /* 手机上进度条缩一号，别挡住图（带 > 同上，避免误伤别的 div） */
+  header .picture li > div .picture-dots {
+    right: 10px;
+    bottom: 10px;
+    padding: 4px 7px;
+    gap: 5px;
+  }
+  header .picture li > div .picture-dot {
+    width: 8px;                            /* 小一号的小椭圆 */
+    height: 6px;
+  }
+  header .picture li > div .picture-dot.is-on {
+    width: 18px;                           /* 小一号的低胶囊 */
+    height: 5px;
+  }
+  /* 夜间卡（原站圆盘卡）：手机上圆盘和文字各缩一号。
+     原来那套 150px 圆按钮的尺寸规则已随结构一起删除 */
+  header .picture li:nth-child(4) .moon {
+    width: 72px;
+    height: 72px;
+  }
+  header .picture li:nth-child(4) .moon em {
+    font-size: 26px;
+  }
+  header .picture li:nth-child(4) .theme-title {
+    font-size: 16px;
+  }
+  header .picture li:nth-child(4) .theme-sub {
+    font-size: 12px;
+  }
 }
-  header .picture li:nth-child(4) div button p{ 
-    width: auto; font-size: 13px; bottom: 12px; right: 12px; 
+/* 状态条（还原自参考站首页那条；手机竖排，≥768 横排定高 80px）
+   —— 玻璃层（底色/边框/圆角/阴影/模糊）全部走 base修改版.css 的卡片令牌，
+      深色由 --card-bg / --card-border 自动切换，不再写 [data-theme="dark"] 覆盖 */
+.status-bar {
+  width: 100%;
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-card);            /* rounded-3xl */
+  background: var(--card-bg);                   /* bg-white/40 */
+  border: 1px solid var(--card-border);         /* border-white/40 */
+  box-shadow: var(--card-shadow);               /* shadow-xl */
+  backdrop-filter: blur(var(--card-blur));      /* backdrop-blur-md */
+  -webkit-backdrop-filter: blur(var(--card-blur));
+  overflow: hidden;
+  transition:
+    background-color 0.7s,
+    border-color 0.7s;
 }
+/* ① 当前时间：深底白字 mono + 中间那条铰链线 */
+.status-bar__clock {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 32px;
+  background: var(--clock-bg);                    /* slate-900 / 深色变黑 */
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  box-shadow: var(--shadow-inset);                /* shadow-inner */
+  transition: color 0.7s;
 }
+.status-bar__clock::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1), transparent);
+}
+.status-bar__clock::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.5);
+}
+.status-bar:hover .status-bar__clock {
+  color: var(--indigo-400);
+} /* 原作 group-hover:text-indigo-400 */
+
+/* ② 运行时长 + ③ 徽章 */
+.status-bar__main {
+  flex: 1;
+  padding: 16px 24px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--status-fg);                 /* slate-600 / 深色 slate-300 */
+  transition: color 0.7s;
+}
+.status-bar__uptime {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.status-bar__uptime b {
+  color: var(--status-accent);             /* indigo-600 / 深色 indigo-400 */
+  font-weight: 900;
+}
+.dot-live {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--green);                /* green-500 */
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+@keyframes pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+.status-bar__stack {
+  display: flex;
+  gap: 8px;
+}
+.chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: var(--radius-xs);
+  background: var(--chip-bg);              /* 浅色 rgba(255,255,255,.5) / 深色 slate-700/50 */
+  border: 1px solid var(--chip-border);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);   /* shadow-sm */
+  font-size: 12px;
+  font-weight: 700;
+}
+.chip i {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--c);
+}
+
+@media (min-width: 768px) {
+  .status-bar {
+    flex-direction: row;
+    align-items: stretch;
+    height: 80px;
+  }
+  .status-bar__clock {
+    padding: 0 32px;
+    font-size: 30px;
+  }
+  .status-bar__main {
+    padding: 0 24px;
+    font-size: 14px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dot-live {
+    animation: none;
+  }
+  /* 照片墙：不做悬停放大（亮度变化保留，它不是"动效"），切图直接跳
+     —— render.js 里同时会关掉自动轮播，只留手动点进度点 */
+  header .picture li div:hover {
+    transform: none;
+  }
+  header .picture li div:hover img.is-active {
+    transform: none;
+  }
+  header .picture li div img {
+    transition: opacity 1ms linear;
+  }
+}
+
+/* =========================================================
+   通用玻璃层：想给别的元素也套上就加 class="card-glass"（首页已启用，见文件末尾）
+   ---------------------------------------------------------
+   用法：给元素加 class="card-glass"，例如
+     <div class="content1 card-glass"> / <div class="content2 card-glass">
+     <li><div class="card-glass">  （照片墙那几格）
+   三行就是原站卡片的玻璃层：1px 白边 + backdrop-blur-md + shadow-xl；
+   需要连底色和圆角一起换就直接用 card.css 里的 .card 类。
+   ========================================================= */
+.card-glass {
+  border: 1px solid var(--card-border);
+  -webkit-backdrop-filter: blur(var(--card-blur));   /* backdrop-blur-md */
+  backdrop-filter: blur(var(--card-blur));
+  box-shadow: var(--card-shadow);                    /* shadow-xl */
+}
+
+/* =========================================================
+   【已启用】把 card.css 抽出的「玻璃卡片层」接到首页真实元素上
+   ---------------------------------------------------------
+   原站每张卡片的面板就是这一串工具类拼出来的：
+     border border-white/40 dark:border-white/10   → var(--card-border)
+     backdrop-blur-md                              → blur(var(--card-blur))
+     shadow-xl                                     → var(--card-shadow)
+   index.html 里已加上 class="card-glass" 的元素：
+     header nav input（搜索框）、.content1、.content2、.picture li div（照片墙 4 格）
+   约定：
+   1) 这里只贴「玻璃层」，刻意不贴 .card 核心类——那个类自带 padding/gap 等布局
+      属性，会和本页已有的 32px / 15px 内距打架；本页布局一行没动。
+   2) .status-bar 的玻璃层早已由上面的 .status-bar 规则实现，无需再贴。
+   3) 下面选择器带 header … 作用域（特异性高于本页原规则），确保 1px 白边 /
+      backdrop-blur 真正生效；阴影用「项目原阴影 + shadow-xl」叠加，
+      并用 hover 规则把原来的 --shadow-heavy 抬升效果原样保留。
+   ========================================================= */
+
+/* ① 搜索框（等价于演示页的 .search 玻璃框） */
+header nav input.card-glass {
+  box-shadow: var(--card-shadow);
+}
+header nav input.card-glass:focus {                  /* 保住原来的焦点蓝边 */
+  border: 2px solid var(--color2-bule);
+}
+
+/* ② 两张主卡：项目原阴影之上再叠一层 shadow-xl */
+header .box .content1.card-glass,
+header .box .content2.card-glass {
+  box-shadow: var(--shadow-medium), var(--card-shadow);
+}
+header .box .content1.card-glass:hover,
+header .box .content2.card-glass:hover {
+  box-shadow: var(--shadow-heavy), var(--card-shadow);   /* 保留 hover 抬升 */
+}
+
+/* ③ 照片墙 4 格 */
+header .picture li div.card-glass {
+  box-shadow: var(--shadow-card), var(--card-shadow);
+}
+
+/* ④ 不支持 backdrop-filter 的浏览器：玻璃层退回更实的底色，避免文字发虚
+   —— 直接改 --glass-fill 令牌，⑤ 的规则会自动跟着生效（不再单独写 .card-glass 背景色） */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root {
+    --glass-fill: rgba(255, 255, 255, 0.9);
+  }
+  [data-theme="dark"] {
+    --glass-fill: rgba(15, 23, 42, 0.9);
+  }
+}
+
+/* ⑤ 玻璃层底色统一用 --glass-fill（浅色 45% / 深色 55%）
+   —— 原来这些元素吃的是 --bg-white-06，深色模式下是 85% 实底，
+      卡背后几乎全被盖住 → 再大的 blur 也看不出来。
+      这条特异性高于上面的原元素规则（header .box .content1 等），改的是背景色，
+      圆角/内距/布局一行没动；顶栏 .head、图标按钮、CLOUD MUSIC 徽章不在其中，保持原样。 */
+header nav input.card-glass,
+header .box .content1.card-glass,
+header .box .content2.card-glass,
+header .picture li div.card-glass {
+  background-color: var(--glass-fill);
+}
+
