@@ -4,3 +4,8 @@ __pycache__/
 *.pyc
 .venv/
 blog.db
+static/img/background1.png
+static/img/pixiv_works_133187084_p0.png
+实习材料/
+testmodeldata.py
+_backup/
