@@ -14,14 +14,14 @@ function createParser(onEvent){
     }
   }
 }
-async function streamChat(message,{onChunk=()=>{}, onError=(e)=>console.log(e)
+async function streamChat(conversationId, message,{onChunk=()=>{}, onError=(e)=>console.log(e)
 , onDone=()=>{}}){
 try{
   const decoder = new TextDecoder('utf-8')
   const res = await fetch('/api/chat/stream',{
     method:'POST',
     headers:{'Content-Type': 'application/json'},
-    body:JSON.stringify({message})
+    body:JSON.stringify({conversation_id: conversationId, message})
   })
   if (res.status === 401) { 
     onError(`HTTP 401 ${(await res.json()).detail}`); 

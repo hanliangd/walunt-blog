@@ -11,13 +11,77 @@
     box-sizing: border-box;
   }
   body{
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: #f0f4f8;
+    height: 100vh;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  /* 美化滚动条 */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
+  }
+  .app-container{
     display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    padding: 20px;
+    height: 100%;
+  }
+  .sidebar{
+    width: 260px;
+    min-width: 200px;    /* 最小不能小于 200px */
+    max-width: 30%; 
+    background: #f7f8fa;
+    border-right: 1px solid #e5e7eb;
+    display: flex;
+    flex-direction: column;
+    padding: 16px 12px;
+    gap: 12px;
+  }
+  .new-chat-btn{
+    width: 100%;
+    padding: 10px;
+    background: #667eea;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .new-chat-btn:hover{
+    background: #5568d3;
+  }
+  .conversation-list{
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .conversation-item{
+    padding: 10px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #333;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .conversation-item:hover{
+    background: #e8ebf0;
+  }
+  .conversation-item.active{
+    background: #667eea;
+    color: #ffffff;
+    font-weight: 600;
   }
   /* 闪烁光标 */
   .cursor {
@@ -34,15 +98,10 @@
     50% { opacity: 0; }
   }
   .chat-container{
-    width: 100%;
-    max-width: 700px;
-    background: #fff;
-    border-radius: 16px;
-    height: 80vh;
-    box-shadow: 0 10px 40px rgba(102, 126, 234, 0.15);
+    flex: 1;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    background: #ffffff;
   }
   .chat-header{
     padding: 16px 20px;
@@ -129,17 +188,25 @@
   </style>
 </head>
 <body>
-  <div class="chat-container">
-    <div class="chat-header">
-      <span>我的 AI 助手</span>
-      <span id="userInfo">加载中...</span>
-    </div>
-    <div id="out"></div>
-    <div class="input-area">
-      <input type="text" id="msg" placeholder="说点什么呢……">
-      <button id="sent">发送</button>
-    </div>
+  <div class="app-container">
+    <!-- 侧边栏 -->
+    <aside class="sidebar">
+    <button id="newChatBtn" class="new-chat-btn">+ 开启新对话</button>
+    <div id="conversationList" class="conversation-list"></div>
+    </aside>
+    <!-- 主聊天区域 -->
+    <main class="chat-container">
+      <div class="chat-header">
+        <span>我的 AI 助手</span>
+        <span id="userInfo">加载中...</span>
+      </div>
+      <div id="out"></div>
+      <div class="input-area">
+        <input type="text" id="msg" placeholder="说点什么呢……">
+        <button id="sent">发送</button>
+      </div>
+    </main>
   </div>
-  <script type="module" src="./chat-ui.js"></script>
+  <script type="module" src="./chat-ui.js?v=20261018"></script>
 </body>
 </html>
