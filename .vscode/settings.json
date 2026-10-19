@@ -27,5 +27,9 @@
   "search.exclude": {
     "**/static/img": true,
     "**/.git": true
-  }
+  },
+
+  // ⑥ 学习期关掉 AI 自动补全（2026-10-17）——它会在你写到一半时插代码，打断推导
+  //    想恢复：删掉下面这一行，或把它改成 true
+  "editor.inlineSuggest.enabled": false
 }
