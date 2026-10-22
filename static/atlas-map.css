@@ -1,0 +1,513 @@
+/* =========================================================
+   atlas-map.css · 文章地图 · CONTENT ATLAS 星图卡片
+   ---------------------------------------------------------
+   结构完全照搬 https://yaronluo.com/series/ 第一张卡片右侧那块地图：
+
+     .hero-atlas    画布：虚线边框 + CSS 画的方格纸
+       .atlas-route <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+       .atlas-pins  针脚层：普通 <a>，用 --x/--y 百分比定位
+       .atlas-compass / .atlas-you / .atlas-hint  装饰
+
+   关键点（改之前先看这三条）：
+   1. 地图没有用「一张背景 SVG」画完，而是「SVG 只画线，圆点用 HTML」。
+      因为圆点要 hover、要点击、要塞文字，用 DOM 比 <text> 好维护；
+      SVG 只负责那条会流动的路线。
+   2. 同一个 d 复制成 3 个 path 做 3 层动画：
+        .atlas-line   静止虚线（路线本身）
+        .atlas-flow   蓝色小点反向流动（能量感）
+        .atlas-runner 亮色短划正向跑（巡逻的光点）
+      三条都写 pathLength="100"，所以 dasharray 里的数值就是「整条路的百分比」。
+   3. 坐标系：viewBox 0 0 100 100 + preserveAspectRatio="none"
+      → SVG 里 x=22 就是画布宽度的 22%，y=27 就是高度的 27%，
+        和针脚的 left:calc(--x*1%) / top:calc(--y*1%) 完全重合。
+      vector-effect="non-scaling-stroke" 保证画布拉扁时线宽还是 1.6px。
+   ========================================================= */
+
+/* =========================================================
+   1. 卡片令牌
+   ---------------------------------------------------------
+   这一段是为了让 demo 能独立跑。接进你现有站点时：
+   - 你的全站已经有 --primary / --glass-card 这类变量 → 整段删掉，自动继承；
+   - 没有 → 保留，改这里的值就能换整张地图的配色。
+   ========================================================= */
+.atlas-card,
+.atlas-scope {
+  --primary: #9c8ac7;                          /* 主色：路线 / 针脚 / 罗盘 */
+  --azusa-blue: #6f9dc0;                       /* 第二层流动虚线 */
+  --tea: #b08a6a;                              /* 「随笔」那枚针脚 */
+  --mio-purple: #8a6fa8;                       /* 「公告」那枚针脚 */
+  --glass-card: rgba(255, 252, 250, 0.72);
+  --glass-border: rgba(124, 104, 150, 0.16);
+  --text-strong: #453a56;
+  --text-body: #5f5470;
+  --text-muted: #9186a3;
+}
+
+/* =========================================================
+   2. 页面外框（只给 demo 用，接进站点后可删）
+   ========================================================= */
+.atlas-demo {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: 100vh;
+  padding: clamp(1.5rem, 5vw, 4rem) 1rem;
+  background:
+    radial-gradient(60% 50% at 18% 0%, #efe6fb 0%, transparent 62%),
+    radial-gradient(55% 45% at 92% 12%, #fbe9ef 0%, transparent 60%),
+    linear-gradient(160deg, #f8f5fc, #efeaf5 55%, #f6f1ec);
+}
+.atlas-demo__wrap {
+  width: min(100%, 46rem);
+}
+[data-theme="dark"] .atlas-demo {
+  background:
+    radial-gradient(60% 50% at 18% 0%, #2b2340 0%, transparent 62%),
+    radial-gradient(55% 45% at 92% 12%, #3a2434 0%, transparent 60%),
+    linear-gradient(160deg, #17141f, #1d1829 55%, #14121a);
+}
+
+/* =========================================================
+   3. 卡片外壳（截图里那张大卡片的玻璃底）
+   ========================================================= */
+.atlas-card {
+  position: relative;
+  padding: clamp(1.1rem, 3vw, 1.7rem) clamp(1rem, 3vw, 1.8rem) 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  border-radius: 1.7rem;
+  background:
+    radial-gradient(120% 90% at 12% 0%, rgba(255, 255, 255, 0.86), transparent 58%),
+    linear-gradient(155deg, rgba(255, 253, 251, 0.78), rgba(244, 239, 251, 0.62));
+  box-shadow:
+    0 28px 70px -38px rgba(88, 68, 108, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  color: var(--text-body);
+  backdrop-filter: blur(18px) saturate(1.15);
+  -webkit-backdrop-filter: blur(18px) saturate(1.15);
+}
+[data-theme="dark"] .atlas-card,
+[data-theme="dark"] .atlas-scope {
+  --primary: #b9a6e0;
+  --azusa-blue: #8fc0dd;
+  --tea: #d3b295;
+  --mio-purple: #b79bd4;
+  --glass-card: rgba(38, 34, 52, 0.66);
+  --glass-border: rgba(196, 181, 253, 0.2);
+  --text-strong: #f1ecff;
+  --text-body: #d6cfe6;
+  --text-muted: #a99fbe;
+}
+/* 卡壳（边框 / 渐变底 / 阴影）只属于 demo 的 .atlas-card，
+   不要跟着 .atlas-scope 走，否则在 post 页里会给半个卡片再套一层壳 */
+[data-theme="dark"] .atlas-card {
+  border-color: rgba(196, 181, 253, 0.16);
+  background:
+    radial-gradient(120% 90% at 12% 0%, rgba(120, 100, 160, 0.22), transparent 58%),
+    linear-gradient(155deg, rgba(40, 35, 55, 0.8), rgba(26, 23, 38, 0.7));
+  box-shadow:
+    0 28px 70px -38px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* =========================================================
+   4. 卡头
+   ========================================================= */
+.atlas-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: color-mix(in srgb, var(--primary) 82%, var(--text-muted));
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+}
+.atlas-title {
+  margin-top: 0.45rem;
+  color: var(--text-strong);
+  font-size: clamp(1.6rem, 4.6vw, 2.05rem);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1.25;
+}
+.atlas-title span {
+  margin-left: 0.35rem;
+  color: var(--text-muted);
+  font-size: 0.7em;
+  font-weight: 400;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+.atlas-sub {
+  margin-top: 0.55rem;
+  color: var(--text-body);
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+  line-height: 1.75;
+}
+
+/* =========================================================
+   5. 画布 .hero-atlas
+   ---------------------------------------------------------
+   方格纸没有用图片：两条 linear-gradient 各画 1px 线，
+   再用 background-size:2.3rem 2.3rem 平铺成格子。
+   ========================================================= */
+.hero-atlas {
+  position: relative;
+  margin-top: 1.2rem;
+  width: 100%;
+  height: clamp(15rem, 30vw, 21.5rem);
+  border: 1px dashed color-mix(in srgb, var(--primary) 26%, var(--glass-border));
+  border-radius: 1.35rem;
+  background-color: color-mix(in srgb, var(--glass-card) 62%, transparent);
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--primary) 8%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--primary) 8%, transparent) 1px, transparent 1px);
+  background-size: 2.3rem 2.3rem;
+  overflow: hidden;
+  /* 单独开层叠上下文：三个 z-index 层（1 路线 / 2 针脚 / 3 装饰）只在卡片内比较 */
+  isolation: isolate;
+}
+
+/* 左上角小标题 / 右下角提示 / 左下角「你在这里」 */
+.atlas-caption,
+.atlas-hint,
+.atlas-you {
+  position: absolute;
+  z-index: 3;
+  color: var(--text-muted);
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+}
+.atlas-caption {
+  top: 0.75rem;
+  left: 0.9rem;
+  color: color-mix(in srgb, var(--primary) 75%, var(--text-muted));
+  font-weight: 800;
+}
+.atlas-hint {
+  right: 0.9rem;
+  bottom: 0.7rem;
+  letter-spacing: 0.04em;
+}
+.atlas-you {
+  bottom: 0.7rem;
+  left: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  padding: 0.16rem 0.45rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+  color: color-mix(in srgb, var(--primary) 82%, var(--text-body));
+  letter-spacing: 0.02em;
+}
+.atlas-you i {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 999px;
+  background: var(--primary);
+  animation: atlas-you-pulse 2.6s ease-in-out infinite;
+}
+
+/* =========================================================
+   6. 路线层
+   ---------------------------------------------------------
+   三个 path 共用一条 d，差异全在 stroke-dasharray / 动画方向。
+   --px / --py 由 JS 写在 .hero-atlas 上（指针视差），
+   路线层只吃 0.4 倍 → 线和针脚之间产生「前后景」错位。
+   ========================================================= */
+.atlas-route {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;                /* 线的点击热区不要挡住针脚 */
+  transform: translate3d(calc(var(--px, 0) * 0.4px), calc(var(--py, 0) * 0.4px), 0);
+  transition: transform 0.5s ease-out;
+}
+.atlas-line,
+.atlas-flow,
+.atlas-runner {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+/* a. 路线本体：短虚线，慢慢往前爬 */
+.atlas-line {
+  stroke: color-mix(in srgb, var(--primary) 42%, transparent);
+  stroke-width: 1.6;
+  stroke-dasharray: 3 2.4;
+  animation: atlas-flow 22s linear infinite;
+}
+/* b. 能量流：小点反向飘（dasharray 的「1 小段 + 9.6 空白」就是一个个点） */
+.atlas-flow {
+  stroke: color-mix(in srgb, var(--azusa-blue) 60%, transparent);
+  stroke-width: 1.2;
+  stroke-dasharray: 0.4 9.6;
+  animation: atlas-flow 9s linear infinite reverse;
+}
+/* c. 巡逻光点：只留 0.55% 长的一小段，沿路正向跑 */
+.atlas-runner {
+  stroke: var(--primary);
+  stroke-width: 3.4;
+  stroke-dasharray: 0.55 100;
+  animation: atlas-run 7.5s linear infinite;
+}
+
+/* =========================================================
+   7. 针脚层
+   ---------------------------------------------------------
+   .atlas-pin 是「圆点 + 胶囊标签」整组居中在坐标上：
+   translate(-50%,-50%) 让整组的外框中心落在 (--x, --y)。
+   （所以路线端点会落在标签中间偏左，这是原站的效果，不是画错）
+   ========================================================= */
+.atlas-pins {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  transform: translate3d(calc(var(--px, 0) * 1px), calc(var(--py, 0) * 1px), 0);
+  transition: transform 0.5s ease-out;
+}
+.atlas-pin {
+  position: absolute;
+  top: calc(var(--y) * 1%);
+  left: calc(var(--x) * 1%);
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  transform: translate(-50%, -50%);
+  transition: transform 0.26s cubic-bezier(0.22, 0.68, 0, 1);
+}
+.atlas-pin:hover {
+  transform: translate(-50%, -50%) scale(1.06);
+}
+
+/* 圆点：实心 --tone + 一圈淡色光晕 + 外扩脉冲环 */
+.pin-dot {
+  position: relative;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 0.74rem;
+  height: 0.74rem;
+  border-radius: 999px;
+  background: var(--tone);
+  box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--tone) 16%, transparent);
+}
+.pin-dot i {
+  width: 0.26rem;
+  height: 0.26rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, white 82%, var(--tone));
+}
+.pin-dot::after {
+  content: "";
+  position: absolute;
+  inset: -0.28rem;
+  border: 1px solid var(--tone);
+  border-radius: 999px;
+  opacity: 0;
+  animation: pin-pulse 3.6s ease-out calc(var(--i) * 0.55s) infinite;
+}
+
+/* 胶囊标签：毛玻璃 + 同色描边，hover 时描边和文字一起变亮 */
+.pin-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.26rem;
+  padding: 0.14rem 0.44rem;
+  border: 1px solid color-mix(in srgb, var(--tone) 26%, var(--glass-border));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--glass-card) 88%, transparent);
+  color: var(--text-body);
+  font-size: 0.66rem;
+  white-space: nowrap;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: border-color 0.24s ease, color 0.24s ease;
+}
+.pin-label b {
+  font-weight: 700;
+}
+.pin-label small {
+  color: color-mix(in srgb, var(--tone) 85%, var(--text-muted));
+  font-size: 0.6rem;
+  font-weight: 700;
+}
+.atlas-pin:hover .pin-label {
+  border-color: color-mix(in srgb, var(--tone) 55%, transparent);
+  color: color-mix(in srgb, var(--tone) 88%, var(--text-strong));
+}
+
+/* =========================================================
+   8. 装饰：未解锁坐标 / 罗盘 / 图例
+   ========================================================= */
+.atlas-unknown {
+  position: absolute;
+  top: calc(var(--y) * 1%);
+  left: calc(var(--x) * 1%);
+  display: grid;
+  place-items: center;
+  width: 1.05rem;
+  height: 1.05rem;
+  border: 1px dashed color-mix(in srgb, var(--text-muted) 45%, transparent);
+  border-radius: 999px;
+  color: color-mix(in srgb, var(--text-muted) 70%, transparent);
+  font-size: 0.6rem;
+  font-weight: 700;
+  transform: translate(-50%, -50%);
+  animation: atlas-unknown 5.5s ease-in-out infinite;
+}
+.atlas-unknown:nth-of-type(2) {
+  animation-delay: 1.6s;
+}
+
+/* 罗盘：外圈 40s 转一圈；指针用同一个 --primary，跟路线不同色阶 */
+.atlas-compass {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 3;
+  width: 3.6rem;
+  height: 3.6rem;
+}
+.atlas-compass svg {
+  width: 100%;
+  height: 100%;
+  animation: compass-spin 40s linear infinite;
+}
+.compass-ring {
+  fill: none;
+  stroke: color-mix(in srgb, var(--primary) 34%, transparent);
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+}
+.compass-ring.is-inner {
+  stroke-dasharray: 1 4;
+  opacity: 0.7;
+}
+.compass-tick {
+  stroke: color-mix(in srgb, var(--primary) 45%, transparent);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+}
+.compass-needle {
+  fill: color-mix(in srgb, var(--primary) 62%, transparent);
+}
+.compass-core {
+  fill: var(--primary);
+}
+
+/* 卡片底部的图例：路线 / 领地 / 星标 / 航线 */
+.hero-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.8rem;
+  margin-top: 0.95rem;
+  padding-top: 0.9rem;
+  border-top: 1px dashed color-mix(in srgb, var(--glass-border) 80%, transparent);
+  color: var(--text-muted);
+  font-size: 0.62rem;
+  /* base修改版.css 给 body * 加了 1px 字距，图例这里要压回 0，
+     否则 4 条说明 + 右侧提示挤不下一行（原站是一行） */
+  letter-spacing: 0;
+}
+.hero-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.hero-legend em {
+  margin-left: auto;
+  color: color-mix(in srgb, var(--text-muted) 88%, transparent);
+  font-style: normal;
+  font-size: 0.62rem;
+}
+.legend-route {
+  width: 1.4rem;
+  border-top: 2px dashed color-mix(in srgb, var(--primary) 55%, transparent);
+}
+.legend-area {
+  width: 0.72rem;
+  height: 0.72rem;
+  border: 1px solid color-mix(in srgb, var(--azusa-blue) 55%, transparent);
+  border-radius: 0.24rem;
+  background: color-mix(in srgb, var(--azusa-blue) 22%, transparent);
+}
+.legend-glyph {
+  color: color-mix(in srgb, var(--primary) 78%, var(--text-muted));
+  font-style: normal;
+  font-weight: 800;
+}
+
+/* =========================================================
+   9. 动画关键帧（数值照抄原站）
+   ---------------------------------------------------------
+   atlas-flow  虚线整体位移：-54 是 (3+2.4)×10，正好走完 10 个循环，
+               循环点对齐，看不出「跳一下」。
+   atlas-run   巡逻段偏移 -100.55 = 整条路 100 + 自己长度 0.55。
+   ========================================================= */
+@keyframes atlas-flow {
+  to { stroke-dashoffset: -54; }
+}
+@keyframes atlas-run {
+  0%   { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -100.55; }
+}
+@keyframes compass-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes atlas-you-pulse {
+  0%, 100% { opacity: 0.35; transform: scale(0.8); }
+  50%      { opacity: 1;    transform: scale(1.15); }
+}
+@keyframes atlas-unknown {
+  0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(0.92); }
+  50%      { opacity: 1;   transform: translate(-50%, -50%) scale(1.06); }
+}
+@keyframes pin-pulse {
+  0%   { opacity: 0.7; transform: scale(0.7); }
+  70%  { opacity: 0;   transform: scale(1.8); }
+  100% { opacity: 0;   transform: scale(1.8); }
+}
+
+/* =========================================================
+   10. 窄屏 / 无障碍
+   ========================================================= */
+@media (max-width: 640px) {
+  .hero-atlas {
+    height: 15rem;
+  }
+  .atlas-compass {
+    width: 3rem;
+    height: 3rem;
+  }
+  .pin-label {
+    padding: 0.12rem 0.38rem;
+    font-size: 0.62rem;
+  }
+  .atlas-hint {
+    display: none;                 /* 小屏放不下，保留「你在这里」就够 */
+  }
+  .hero-legend em {
+    flex-basis: 100%;
+    margin-left: 0;
+  }
+}
+
+/* 用户在系统里开了「减少动态效果」：所有循环动画停掉，
+   但保留 hover 缩放和视差 —— 那两个是跟手操作，不是自播动画。 */
+@media (prefers-reduced-motion: reduce) {
+  .atlas-line,
+  .atlas-flow,
+  .atlas-runner,
+  .atlas-compass svg,
+  .atlas-you i,
+  .atlas-unknown,
+  .pin-dot::after {
+    animation: none;
+  }
+}
+

@@ -1,0 +1,475 @@
+/* =========================================================
+   note.css · 学习笔记阅读页（4 个入口共用）
+   ---------------------------------------------------------
+   结构：左边目录（.note-toc）+ 右边纸片（.card.note-paper）
+   Markdown 由 note.js + vendor/marked.min.js 渲染，
+   这里只负责“杂志式排版”：标题、表格、代码块、引用、列表。
+   颜色继续走 card.css 的 --fg / --fg-sub / --indigo / --purple，
+   所以深色模式不用单独写一套。
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   0) 底色 / 顶栏 / 阅读进度条
+   --------------------------------------------------------- */
+.note-page {
+  min-height: 100vh;
+  color: var(--fg);
+  background: #eef1f8;
+}
+.note-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(52% 42% at 14% 0%, #e6ebff 0%, transparent 62%),
+    radial-gradient(48% 40% at 88% 8%, #fbe8f4 0%, transparent 60%),
+    radial-gradient(60% 50% at 50% 100%, #e9f3ff 0%, transparent 65%),
+    linear-gradient(165deg, #f7f8fc 0%, #eef1f8 52%, #f6f2f8 100%);
+}
+[data-theme="dark"] .note-page {
+  background: #0d1220;
+}
+[data-theme="dark"] .note-bg {
+  background:
+    radial-gradient(52% 42% at 14% 0%, #1b2542 0%, transparent 62%),
+    radial-gradient(48% 40% at 88% 8%, #2a1b33 0%, transparent 60%),
+    radial-gradient(60% 50% at 50% 100%, #10243a 0%, transparent 65%),
+    linear-gradient(165deg, #0b1020 0%, #0d1220 52%, #120e1a 100%);
+}
+
+/* 顶部 2px 阅读进度：--p 由 note.js 按滚动比例写进来 */
+.note-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 60;
+  width: var(--p, 0%);
+  height: 2px;
+  background: linear-gradient(90deg, var(--indigo), var(--purple));
+  transition: width 0.08s linear;
+}
+
+.note-nav {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: min(100%, 1080px);
+  height: 56px;
+  margin: 0 auto;
+  padding: 0 16px;
+  background: color-mix(in srgb, var(--card-bg) 86%, transparent);
+  border-bottom: 1px solid var(--card-border);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+}
+.note-back {
+  color: var(--indigo);
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.note-back:hover {
+  color: var(--purple);
+}
+.note-crumb {
+  overflow: hidden;
+  color: var(--fg-sub);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------
+   1) 两栏：目录 230px + 正文自适应
+   --------------------------------------------------------- */
+.note-shell {
+  display: grid;
+  grid-template-columns: 230px minmax(0, 1fr);
+  align-items: start;
+  gap: 20px;
+  width: min(100%, 1080px);
+  margin: 0 auto;
+  padding: 22px 16px 48px;
+}
+
+/* ---------------------------------------------------------
+   2) 目录卡：滚动时吸在顶栏下面
+   --------------------------------------------------------- */
+.note-toc {
+  position: sticky;
+  top: 76px;
+  max-height: calc(100vh - 96px);
+  overflow-y: auto;
+  padding: 14px 10px;
+  border-radius: 16px;
+}
+.note-toc__title {
+  padding: 2px 8px 8px;
+  color: var(--indigo);
+  font-size: 10.5px;
+  font-weight: 900;
+  letter-spacing: 0.2em;
+}
+.note-toc__list a {
+  display: block;
+  overflow: hidden;
+  padding: 5px 9px;
+  border-left: 2px solid transparent;
+  border-radius: 0 8px 8px 0;
+  color: var(--fg-sub);
+  font-size: 12px;
+  line-height: 1.55;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+.note-toc__list a:hover {
+  color: var(--indigo);
+  background: rgba(99, 102, 241, 0.07);
+}
+.note-toc__list a.is-sub {
+  padding-left: 20px;
+  font-size: 11.5px;
+  opacity: 0.85;
+}
+.note-toc__list a.is-active {
+  border-left-color: var(--indigo);
+  background: rgba(99, 102, 241, 0.09);
+  color: var(--indigo);
+  font-weight: 700;
+}
+
+/* ---------------------------------------------------------
+   3) 纸片：头部（kicker / 标题 / 元信息）
+   --------------------------------------------------------- */
+.card.note-paper {
+  padding: clamp(22px, 4vw, 44px);
+  border-radius: 22px;
+}
+.note-head {
+  padding-bottom: 18px;
+  margin-bottom: 24px;
+  border-bottom: 1px dashed var(--card-border);
+}
+.note-kicker {
+  color: var(--indigo);
+  font-size: 10.5px;
+  font-weight: 900;
+  letter-spacing: 0.22em;
+}
+#noteTitle {
+  margin-top: 8px;
+  color: var(--fg);
+  font-size: clamp(26px, 4.4vw, 36px);
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  line-height: 1.3;
+}
+.note-meta {
+  margin-top: 10px;
+  color: var(--fg-sub);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+/* ---------------------------------------------------------
+   4) Markdown 正文排版
+   ---------------------------------------------------------
+   base修改版.css 给所有元素加了 1px 字距，长文会显得散；
+   正文这里压到 0.02em，表格/代码再单独归零。
+   --------------------------------------------------------- */
+.note-body {
+  color: var(--fg);
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  line-height: 1.95;
+  overflow-wrap: anywhere;
+}
+.note-body > *:first-child {
+  margin-top: 0;
+}
+.note-body h2 {
+  margin: 38px 0 14px;
+  padding-bottom: 9px;
+  border-bottom: 1px dashed var(--card-border);
+  color: var(--fg);
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1.4;
+  scroll-margin-top: 84px;
+}
+.note-body h3 {
+  margin: 26px 0 10px;
+  color: var(--fg);
+  font-size: 17px;
+  font-weight: 900;
+  line-height: 1.5;
+  scroll-margin-top: 84px;
+}
+.note-body h4 {
+  margin: 20px 0 8px;
+  color: var(--fg);
+  font-size: 15px;
+  font-weight: 800;
+  scroll-margin-top: 84px;
+}
+.note-body p {
+  margin: 11px 0;
+}
+.note-body ul,
+.note-body ol {
+  margin: 11px 0;
+  padding-left: 1.5em;
+}
+.note-body li {
+  margin: 5px 0;
+}
+.note-body li > ul,
+.note-body li > ol {
+  margin: 5px 0;
+}
+.note-body strong {
+  color: var(--fg);
+  font-weight: 800;
+}
+.note-body a {
+  color: var(--indigo);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(99, 102, 241, 0.32);
+}
+.note-body a:hover {
+  color: var(--purple);
+  border-bottom-color: rgba(168, 85, 247, 0.45);
+}
+.note-body blockquote {
+  margin: 16px 0;
+  padding: 11px 16px;
+  border-left: 3px solid var(--indigo-400);
+  border-radius: 0 12px 12px 0;
+  background: rgba(99, 102, 241, 0.06);
+  color: var(--fg-sub);
+}
+.note-body blockquote p {
+  margin: 5px 0;
+}
+.note-body hr {
+  margin: 28px 0;
+  border: 0;
+  border-top: 1px dashed var(--card-border);
+}
+.note-body img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 12px;
+}
+.note-body input[type="checkbox"] {
+  margin-right: 6px;
+  accent-color: var(--indigo);
+}
+
+/* ---------------------------------------------------------
+   5) 行内代码 / 代码块
+   --------------------------------------------------------- */
+.note-body code {
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: rgba(99, 102, 241, 0.1);
+  color: #4f46e5;
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  letter-spacing: 0;
+}
+[data-theme="dark"] .note-body code {
+  background: rgba(129, 140, 248, 0.18);
+  color: #c7d2fe;
+}
+.note-body pre {
+  margin: 16px 0;
+  padding: 14px 16px;
+  overflow-x: auto;
+  border-radius: 12px;
+  background: #0f172a;
+  color: #e2e8f0;
+  font-size: 12.5px;
+  letter-spacing: 0;
+  line-height: 1.7;
+  -webkit-overflow-scrolling: touch;
+}
+[data-theme="dark"] .note-body pre {
+  border: 1px solid var(--card-border);
+  background: #070b14;
+}
+.note-body pre code {
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  color: inherit;
+  font-size: inherit;
+}
+
+/* ---------------------------------------------------------
+   6) 表格：外层 .note-table 由 note.js 包出来，窄屏横向滚动
+   --------------------------------------------------------- */
+.note-table {
+  margin: 18px 0;
+  overflow-x: auto;
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--card-bg) 52%, transparent);
+  -webkit-overflow-scrolling: touch;
+}
+.note-body table {
+  width: 100%;
+  min-width: 560px;
+  border-collapse: collapse;
+  font-size: 12.8px;
+  letter-spacing: 0;
+  line-height: 1.65;
+}
+.note-body th,
+.note-body td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--card-border);
+  text-align: left;
+  vertical-align: top;
+}
+.note-body th {
+  background: rgba(99, 102, 241, 0.09);
+  color: var(--fg);
+  font-weight: 800;
+  white-space: nowrap;
+}
+.note-body tbody tr:last-child td {
+  border-bottom: 0;
+}
+.note-body tbody tr:hover {
+  background: rgba(99, 102, 241, 0.04);
+}
+
+/* ---------------------------------------------------------
+   7) 上一页 / 下一页
+   --------------------------------------------------------- */
+.note-pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  margin-top: 34px;
+  padding-top: 18px;
+  border-top: 1px dashed var(--card-border);
+  font-size: 12.5px;
+}
+.note-pager a {
+  color: var(--indigo);
+  font-weight: 700;
+  text-decoration: none;
+}
+.note-pager a:hover {
+  color: var(--purple);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ---------------------------------------------------------
+   8) 加载 / 失败
+   --------------------------------------------------------- */
+.note-loading {
+  padding: 24px 0;
+  color: var(--fg-sub);
+  font-size: 13px;
+  text-align: center;
+  animation: note-pulse 1.6s ease-in-out infinite;
+}
+.note-error {
+  padding: 14px 16px;
+  border: 1px solid rgba(244, 114, 182, 0.35);
+  border-radius: 12px;
+  background: rgba(244, 114, 182, 0.08);
+  color: #be185d;
+  font-size: 13px;
+  line-height: 1.8;
+}
+[data-theme="dark"] .note-error {
+  color: #f9a8d4;
+}
+.note-error code {
+  background: rgba(190, 24, 93, 0.12);
+  color: inherit;
+}
+@keyframes note-pulse {
+  0%, 100% { opacity: 0.45; }
+  50%      { opacity: 1; }
+}
+
+/* ---------------------------------------------------------
+   9) 响应式 / 打印
+   --------------------------------------------------------- */
+@media (max-width: 980px) {
+  .note-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .note-toc {
+    display: none;                 /* 窄屏先保证正文宽度，目录留给滚动条 */
+  }
+}
+
+@media (max-width: 768px) {
+  .note-nav {
+    height: 52px;
+    padding: 0 12px;
+  }
+  .note-crumb {
+    font-size: 11px;
+  }
+  .note-shell {
+    padding: 14px 12px 36px;
+  }
+  .card.note-paper {
+    border-radius: 18px;
+  }
+  .note-head {
+    padding-bottom: 14px;
+    margin-bottom: 18px;
+  }
+  .note-body {
+    font-size: 14.5px;
+    line-height: 1.9;
+  }
+  .note-body h2 {
+    margin-top: 30px;
+    font-size: 20px;
+  }
+  .note-body h3 {
+    font-size: 16px;
+  }
+  .note-body th,
+  .note-body td {
+    padding: 8px 10px;
+  }
+}
+
+@media print {
+  .note-nav,
+  .note-progress,
+  .note-toc,
+  .note-pager,
+  .note-bg {
+    display: none !important;
+  }
+  .note-page {
+    background: #fff;
+  }
+  .card.note-paper {
+    border: 0;
+    box-shadow: none;
+    background: #fff;
+  }
+}
+

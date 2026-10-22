@@ -43,10 +43,10 @@ async def generate_title(api_key: str, user_message: str, ai_reply: str) -> str:
                 },
             )
             if r.status_code == 200:
-                print(
-                    f"Title generated successfully: {r.json()['choices'][0]['message']['content'].strip()}"
-                )
-                return _clean_title(r.json()["choices"][0]["message"]["content"])
+                data = r.json()
+                content = data["choices"][0]["message"]["content"]
+                print(f"Title generated successfully: {content.strip()}")
+                return _clean_title(content)
             else:
                 print(f"Error generating title: {r.status_code} - {r.text}")
                 return None

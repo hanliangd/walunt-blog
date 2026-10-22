@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文章地图 · walunt の宝藏之地</title>
+    <link rel="shortcut icon" href="./img/favicon-32x32.png" type="image/x-icon">
+    <link rel="stylesheet" href="./base修改版.css?v=20261021-2">
+    <link rel="stylesheet" href="./card.css?v=20261021-2">
+    <!-- 地图组件（.hero-atlas / .atlas-pin …），post.css 只负责页面布局与卡片排布 -->
+    <link rel="stylesheet" href="./atlas-map.css?v=20261021-2">
+    <link rel="stylesheet" href="./post.css?v=20261021-2">
+</head>
+<!-- 文章地图页：上下两张玻璃大卡
+     ① 文章地图  左：计数 + 唯一个跳转按钮（从这里出发 → #start）  右：四篇笔记的星图
+     ② 从这里出发：四篇 Markdown 笔记的入口卡
+     计数先写死（4 篇 / 52,257 字 / 131 分钟），数字来源见文件末尾注释。 -->
+<body class="post-page">
+    <div class="post-bg" aria-hidden="true"></div>
+
+    <header class="post-nav">
+        <a class="post-nav__logo" href="./index.html">walunt <span>の</span> 宝藏之地</a>
+        <nav class="post-nav__links" aria-label="站点导航">
+            <a href="./index.html">主页</a>
+            <a class="is-active" href="./post.html" aria-current="page">文章地图</a>
+        </nav>
+    </header>
+
+    <main class="post-main">
+        <!-- =====================================================
+             ① 文章地图
+             ===================================================== -->
+        <section class="card post-hero" id="map">
+            <div class="box-left post-hero__left">
+                <p class="post-eyebrow">ARTICLE MAP · walunt</p>
+                <h1 class="post-title">文章地图 <span>(｡•ᴗ•｡)♡</span></h1>
+                <p class="post-sub">从零开始，学习全栈开发，沿着卡片，翻着地图，走入我的来时路~</p>
+
+                <!-- 计数：目前写死，改笔记后同步这四个数即可（算法见文末注释） -->
+                <ul class="post-stats">
+                    <li>
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>
+                        <b>4</b><span>篇笔记</span>
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+                        <b>52,257</b><span>字</span>
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8"/></svg>
+                        <b>131</b><span>分钟</span>
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>
+                        <b>4</b><span>个坐标</span>
+                    </li>
+                </ul>
+
+                <!-- 页内只有一个可跳转板块，所以只留「从这里出发」 -->
+                <a class="post-jump" href="#start">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 3.5 4 10l6.2 2.5L12.7 19z"/><path d="M10.2 12.5 20.5 3.5"/></svg>
+                    <b>从这里出发</b>
+                    <small>4 个入口</small>
+                </a>
+                <a class="post-jump" href="./create_post.html">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>
+                    <b>文章列表</b>
+                    <small>3 个入口</small>
+                </a>
+            </div>
+
+            <!-- 地图：令牌（--primary / --glass-* / --text-*）挂在 .post-hero 上，
+                 颜色全部映射到 card.css 的 --indigo / --purple，深色模式自动跟随 -->
+            <div class="box-right post-hero__right">
+                <div class="hero-atlas" data-atlas>
+                    <span class="atlas-caption">CONTENT ATLAS</span>
+
+                    <!-- 路线：x/y 就是百分比坐标，与针脚的 --x/--y 同一套；d 由 atlas-map.js 按针脚顺序重算 -->
+                    <svg class="atlas-route" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                        <path class="atlas-line" data-atlas-path pathLength="100" vector-effect="non-scaling-stroke"
+                              d="M 20 26 L 46 14 L 70 32 L 34 64"></path>
+                        <path class="atlas-flow" data-atlas-path pathLength="100" vector-effect="non-scaling-stroke"
+                              d="M 20 26 L 46 14 L 70 32 L 34 64"></path>
+                        <path class="atlas-runner" data-atlas-path pathLength="100" vector-effect="non-scaling-stroke"
+                              d="M 20 26 L 46 14 L 70 32 L 34 64"></path>
+                    </svg>
+
+                    <div class="atlas-pins">
+                        <a class="atlas-pin" href="./notes/进度.html" title="进度 · 5 个阶段"
+                           style="--x: 20; --y: 26; --tone: var(--indigo); --i: 0">
+                            <span class="pin-dot"><i></i></span>
+                            <span class="pin-label"><b>进度</b><small>5</small></span>
+                        </a>
+                        <a class="atlas-pin" href="./notes/工作日志.html" title="工作日志 · 16 篇记录"
+                           style="--x: 46; --y: 14; --tone: var(--indigo-400); --i: 1">
+                            <span class="pin-dot"><i></i></span>
+                            <span class="pin-label"><b>工作日志</b><small>16</small></span>
+                        </a>
+                        <a class="atlas-pin" href="./notes/踩坑记录.html" title="踩坑记录 · 22 条"
+                           style="--x: 70; --y: 32; --tone: var(--pink); --i: 2">
+                            <span class="pin-dot"><i></i></span>
+                            <span class="pin-label"><b>踩坑记录</b><small>22</small></span>
+                        </a>
+                        <a class="atlas-pin" href="./notes/反思-业务逻辑分层.html" title="反思 · 6 节"
+                           style="--x: 34; --y: 64; --tone: var(--purple); --i: 3">
+                            <span class="pin-dot"><i></i></span>
+                            <span class="pin-label"><b>反思</b><small>6</small></span>
+                        </a>
+
+                        <span class="atlas-unknown" style="--x: 12; --y: 48" title="还没写到的坐标">?</span>
+                        <span class="atlas-unknown" style="--x: 86; --y: 60" title="还没写到的坐标">?</span>
+                    </div>
+
+                    <div class="atlas-compass" aria-hidden="true">
+                        <svg viewBox="0 0 64 64">
+                            <circle class="compass-ring" cx="32" cy="32" r="26"></circle>
+                            <circle class="compass-ring is-inner" cx="32" cy="32" r="17"></circle>
+                            <path class="compass-tick" d="M32 3 v7 M32 54 v7 M3 32 h7 M54 32 h7"></path>
+                            <path class="compass-needle" d="M32 12 L37 34 L32 42 L27 34 Z"></path>
+                            <circle class="compass-core" cx="32" cy="32" r="2.4"></circle>
+                        </svg>
+                    </div>
+
+                    <span class="atlas-you"><i></i>你在这里</span>
+                    <span class="atlas-hint">点一下坐标就能翻开笔记</span>
+                </div>
+            </div>
+
+            <div class="post-hero__legend hero-legend">
+                <span><i class="legend-route" aria-hidden="true"></i>顺序 ＝ 一条路线</span>
+                <span><i class="legend-area" aria-hidden="true"></i>笔记 ＝ 一片领地</span>
+                <span><i class="legend-glyph" aria-hidden="true">✦</i>高频 ＝ 散落的星标</span>
+                <span><i class="legend-glyph" aria-hidden="true">↺</i>日期 ＝ 一条航线</span>
+                <em>小提示：地图会跟着新笔记一起长大 ✧</em>
+            </div>
+        </section>
+
+        <!-- =====================================================
+             ② 从这里出发：四篇笔记的入口
+             ===================================================== -->
+        <section class="card post-start" id="start">
+            <div class="post-section-head">
+                <div class="post-section-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M20.5 3.5 4 10l6.2 2.5L12.7 19z"/><path d="M10.2 12.5 20.5 3.5"/></svg>
+                </div>
+                <div class="post-section-title">
+                    <p>START HERE</p>
+                    <h2>从这里出发</h2>
+                </div>
+                <span class="post-section-note">四篇笔记：先看进度，剩下的按当天心情随便翻</span>
+            </div>
+
+            <div class="post-grid">
+                <a class="card note-card" href="./notes/进度.html" style="--tone: var(--indigo)">
+                    <span class="note-badge">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 12l2 2v2h-5v6l-1 1-1-1v-6H6v-2l2-2V5H7V3h10v2h-1z"/></svg>
+                        先看这里
+                    </span>
+                    <h3 class="note-title">进度</h3>
+                    <p class="note-desc">从“让博客活起来”到 SSE 流式，五个阶段逐条对照：哪些真的跑通、哪些还欠一条验收，一眼看清下一步该补哪。</p>
+                    <span class="note-meta">
+                        <span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>2026-10-20</span>
+                        <span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8"/></svg>约 20 分钟</span>
+                        <span class="note-tag">阶段总览</span>
+                    </span>
+                    <span class="note-go">翻到这一页 →</span>
+                </a>
+
+                <a class="card note-card" href="./notes/工作日志.html" style="--tone: var(--indigo-400)">
+                    <span class="note-badge">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>
+                        最新更新
+                    </span>
+                    <h3 class="note-title">工作日志</h3>
+                    <p class="note-desc">按日期倒序的施工记录：目标、做了什么、卡在哪、下次从哪开始。连着读几篇，就是这条路最真实的坡度。</p>
+                    <span class="note-meta">
+                        <span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>2026-10-18</span>
+                        <span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8"/></svg>约 58 分钟</span>
+                        <span class="note-tag">逐日记录</span>
+                    </span>
+                    <span class="note-go">翻到这一页 →</span>
+                </a>
+
+                <a class="card note-card" href="./notes/踩坑记录.html" style="--tone: var(--pink)">
+                    <span class="note-badge">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                        从零开始
+                    </span>
+                    <h3 class="note-title">踩坑记录</h3>
+                    <p class="note-desc">症状 → 根因 → 怎么治。HTML id 大小写、return 后面的死代码、流式接口的异常边界，都记在这里，同一个坑不踩第二次。</p>
+                    <span class="note-meta">
+                        <span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>2026-10-17</span>
+                        <span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8"/></svg>约 41 分钟</span>
+                        <span class="note-tag">项目侧</span>
+                    </span>
+                    <span class="note-go">翻到这一页 →</span>
+                </a>
+
+                <a class="card note-card" href="./notes/反思-业务逻辑分层.html" style="--tone: var(--purple)">
+                    <span class="note-badge">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h5l7 10h5M3 17h5l7-10h5"/><path d="M18 4l3 3-3 3M18 14l3 3-3 3"/></svg>
+                        随便翻翻
+                    </span>
+                    <h3 class="note-title">反思 · 业务逻辑分层</h3>
+                    <p class="note-desc">四层结构对照项目现状：异常按“哪一层抛的”分，流式上游只能 yield，没到规模就别急着抽 service。</p>
+                    <span class="note-meta">
+                        <span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>2026-10-15</span>
+                        <span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8"/></svg>约 12 分钟</span>
+                        <span class="note-tag">架构反思</span>
+                    </span>
+                    <span class="note-go">翻到这一页 →</span>
+                </a>
+            </div>
+        </section>
+        <section class="card post-list">
+            <div class="post-section-head">
+                <div class="post-section-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>
+                </div>
+                <div class="post-section-title">
+                    <p>CREATE POST</p>
+                    <h2>文章列表</h2>
+                </div>
+                <span class="post-section-note">请开始你的创作</span>
+            </div>
+            <div class="post-grid" id="article-list">
+
+            </div>
+        </section>
+    </main>
+
+    <footer class="post-foot">
+        <span>地图会跟着新笔记一起长大 ✧</span>
+        <a href="#map">回到地图顶部 ↑</a>
+    </footer>
+
+    <!-- 视差 + 按针脚坐标重算路线；和 atlas-map 示例页共用同一个脚本 -->
+    <script src="./atlas-map.js?v=20261021-2"></script>
+    <script src="./render-post.js?v=20261021-2"></script>
+</body>
+</html>
+
+<!-- ---------------------------------------------------------
+     计数口径（现在是写死的，笔记变了再同步）：
+       篇数   = 4
+       字数   = 四篇 md 去掉空白后的字符数：8,048 + 23,165 + 16,410 + 4,634 = 52,257
+       分钟   = 字数 / 400 ≈ 131（按“技术笔记 400 字/分钟”粗算）
+       坐标   = 地图针脚数 = 4；针脚上的小数字是各篇的章节/条目数
+     --------------------------------------------------------- -->

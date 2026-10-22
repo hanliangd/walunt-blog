@@ -97,6 +97,7 @@ class PostOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     title: str
     author: str
+    id: int
 
 
 class PostCreat(BaseModel):
@@ -149,7 +150,7 @@ def get_homepage():
             "项目",
             "照片",
             "音乐",
-            "关于",
+            "文章",
             "好友",
             "杂谈",
             "设置",
@@ -216,8 +217,16 @@ def get_users():
 @app.get("/api/post", response_model=list[PostOut])
 def get_posts():
     with SessionLocal() as session:
-        posts = session.scalars(select(Post)).all()
-        return [{"title": p.title, "author": p.author.username} for p in posts]
+        posts = session.scalars(select(Post).where(Post.status == "published")).all()
+        return [
+            {
+                "id": p.id,
+                "title": p.title,
+                "author": p.author.username,
+                "content": p.content,
+            }
+            for p in posts
+        ]
 
 
 @app.get("/api/users/{user_id}/post")
@@ -233,11 +242,31 @@ def get_user_posts(user_id: int):
 @app.post("/api/post", status_code=201)
 def create_post(data: PostCreat, current_user: User = Depends(get_current_user)):
     with SessionLocal() as session:
-        post = Post(title=data.title, content=data.content, users_id=current_user.id)
+        post = Post(
+            title=data.title,
+            content=data.content,
+            users_id=current_user.id,
+            status="published",
+        )
         session.add(post)
         session.commit()
         session.refresh(post)
         return {"id": post.id, "title": post.title}
+
+
+@app.get("/api/post/{post_id}")
+def get_post(post_id: int):
+    with SessionLocal() as session:
+        post = session.get(Post, post_id)
+        if not post:
+            raise HTTPException(404, "文章不存在")
+        return {
+            "id": post_id,
+            "title": post.title,
+            "content": post.content,
+            "author": post.author.username,
+            "created_at": post.created_at,
+        }
 
 
 @app.delete("/api/post/{post_id}")

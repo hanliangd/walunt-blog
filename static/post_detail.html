@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>文章详情 - 宝藏之地</title>
+  <link rel="shortcut icon" href="./img/favicon-32x32.png" type="image/x-icon">
+  <!-- 借用笔记页的超赞样式！ -->
+  <link rel="stylesheet" href="./base修改版.css">
+  <link rel="stylesheet" href="./card.css">
+  <link rel="stylesheet" href="./notes/note.css"> 
+</head>
+<body class="note-page">
+  <div class="note-bg" aria-hidden="true"></div>
+  <div class="note-progress" id="progressBar" aria-hidden="true"></div>
+  
+  <header class="note-nav">
+    <a class="note-back" href="./post.html">← 回到文章地图</a>
+    <span class="note-crumb" id="crumb">文章详情</span>
+  </header>
+
+  <main class="note-shell">
+    <aside class="note-toc card" aria-label="本页目录" id="tocBox">
+      <p class="note__title">本页目录</p>
+      <nav class="note-toc__list" id="noteToc"></nav>
+    </aside>
+
+    <article class="card note-paper">
+      <header class="note-head">
+        <p class="note-kicker" style="color: var(--indigo);">ARTICLE</p>
+        <h1 id="postTitle">正在加载文章...</h1>
+        <p class="note-meta" id="postMeta"></p>
+      </header>
+      <!-- 正文渲染区 -->
+      <div class="note-body" id="postContent">
+        <p class="note-loading">正在加载文章…</p>
+      </div>
+      <footer>
+        <a href="./post.html">← 返回文章列表</a>
+      </footer>
+    </article>
+  </main>
+  <script src="./vendor/marked.min.js"></script>
+  <script src="./vendor/purify.min.js"></script>
+  <script type="module" src="./post_detail.js?v=20261022"></script>
+</body>
+</html>

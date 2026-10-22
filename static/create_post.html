@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>写文章 - 宝藏之地</title>
+    <link rel="stylesheet" href="./base修改版.css">
+    <link rel="stylesheet" href="./card.css">
+    <!-- 借用一下你刚才的 post.css 里面的大卡片样式 -->
+    <link rel="stylesheet" href="./post.css">
+</head>
+<body class="post-page">
+    <main class="post-main" style="margin-top: 50px;">
+        <section class="card post-start" style="padding: 40px;">
+            <h2>发布新文章</h2>
+            <form id="postForm" style="display: flex; flex-direction: column; gap: 20px; margin-top: 20px;">
+                <input type="text" id="title" placeholder="输入文章标题" required 
+                       style="padding: 15px; border-radius: 10px; border: 1px solid #ccc; font-size: 18px;">
+                
+                <textarea id="content" placeholder="输入正文内容..." required 
+                          style="padding: 15px; border-radius: 10px; border: 1px solid #ccc; height: 300px; font-size: 15px; resize: vertical;"></textarea>
+                
+                <button type="submit" class="new-chat-btn" style="padding: 15px; font-size: 16px;">
+                    确认发布
+                </button>
+            </form>
+        </section>
+    </main>
+
+    <script>
+        document.getElementById('postForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = document.getElementById('title').value;
+            const content = document.getElementById('content').value;
+
+            try {
+                const res = await fetch('/api/post', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, content })
+                });
+
+                if (res.status === 401) {
+                    alert("请先登录！");
+                    location.href = './login.html?next=' + encodeURIComponent('./create_post.html');
+                    return;
+                }
+
+                if (res.ok) {
+                    alert("发布成功！");
+                    // 发布成功后跳转到列表页（这里先随便跳，等你写好了列表页再改）
+                    location.href = './post.html'; 
+                } else {
+                    alert("发布失败，请检查输入");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("网络错误");
+            }
+        });
+    </script>
+</body>
+</html>

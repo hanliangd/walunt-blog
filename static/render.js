@@ -21,6 +21,13 @@ async function loadHomepage() {
             a.href = ''
             a.className = 'nav1'
             a.textContent = text
+            if (text === '文章' || text === '项目') {
+             a.href = './post.html'; // 跳转到你新做的文章页
+             } else if (text === '首页') {
+             a.href = './index.html';
+             } else {
+             a.href = 'javascript:void(0)'; // 其他暂未开发的设为无效链接
+             }
             return a
         }))
         const firstLink = navContainer.querySelector('a')

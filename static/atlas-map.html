@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文章地图 · CONTENT ATLAS 星图卡片</title>
+    <link rel="shortcut icon" href="./img/favicon-32x32.png" type="image/x-icon">
+    <link rel="stylesheet" href="./base修改版.css?v=20261021-1">
+    <link rel="stylesheet" href="./atlas-map.css?v=20261021-1">
+</head>
+<!-- 这个文件只演示「第一张卡片」右侧那块 SVG 地图（CONTENT ATLAS）。
+     结构照搬 yaronluo.com/series/：
+       .hero-atlas  画布（虚线边框 + 方格纸）
+         .atlas-route  一条路线，同一个 d 复制成 3 个 path 做 3 层动画
+         .atlas-pins   针脚是普通 <a>，用 --x/--y 百分比定位（不是 SVG 元素）
+     JS 只在 atlas-map.js 里：视差 + 用针脚坐标回写路线 d。 -->
+<body class="atlas-demo">
+    <main class="atlas-demo__wrap">
+        <section class="atlas-card">
+            <header class="atlas-head">
+                <p class="atlas-eyebrow">ARTICLE MAP · 文章地图</p>
+                <h1 class="atlas-title">文章地图 <span>(｡•ᴗ•｡)♡</span></h1>
+                <p class="atlas-sub">沿着分类和标签，找到想看的内容。<br>像翻一张手绘地图那样，从一个坐标逛到另一个坐标～</p>
+            </header>
+
+            <!-- data-atlas：JS 把 --px / --py 写在这个元素上，子层自己决定视差倍数 -->
+            <div class="hero-atlas" data-atlas>
+                <span class="atlas-caption">CONTENT ATLAS</span>
+
+                <!-- ① 路线层
+                     viewBox="0 0 100 100" + preserveAspectRatio="none"
+                     → 坐标 0~100 就等于画布的 0%~100%，跟针脚的 --x/--y 同一套坐标系。
+                     pathLength="100" → 三条虚线动画的 dasharray 直接用「整条路的百分比」，
+                     以后改路线长度不用重算数字。
+                     vector-effect="non-scaling-stroke" → 画布被拉伸时线宽不跟着变形。 -->
+                <svg class="atlas-route" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                    <path class="atlas-line" data-atlas-path pathLength="100" vector-effect="non-scaling-stroke"
+                          d="M 22 27 L 45 16 L 64 31 L 30 62"></path>
+                    <path class="atlas-flow" data-atlas-path pathLength="100" vector-effect="non-scaling-stroke"
+                          d="M 22 27 L 45 16 L 64 31 L 30 62"></path>
+                    <path class="atlas-runner" data-atlas-path pathLength="100" vector-effect="non-scaling-stroke"
+                          d="M 22 27 L 45 16 L 64 31 L 30 62"></path>
+                </svg>
+
+                <!-- ② 针脚层：DOM 顺序 = 路线顺序（JS 按这个顺序连线段）
+                     --x / --y   百分比坐标
+                     --tone      这一站的颜色
+                     --i         第几个，用来错开脉冲动画 -->
+                <div class="atlas-pins">
+                    <a class="atlas-pin" href="./index.html?category=Life" title="Life · 4 篇"
+                       style="--x: 22; --y: 27; --tone: var(--primary); --i: 0">
+                        <span class="pin-dot"><i></i></span>
+                        <span class="pin-label"><b>Life</b><small>4</small></span>
+                    </a>
+                    <a class="atlas-pin" href="./index.html?category=Technology" title="Technology · 2 篇"
+                       style="--x: 45; --y: 16; --tone: var(--azusa-blue); --i: 1">
+                        <span class="pin-dot"><i></i></span>
+                        <span class="pin-label"><b>Technology</b><small>2</small></span>
+                    </a>
+                    <a class="atlas-pin" href="./index.html?category=%E9%9A%8F%E7%AC%94" title="随笔 · 2 篇"
+                       style="--x: 64; --y: 31; --tone: var(--tea); --i: 2">
+                        <span class="pin-dot"><i></i></span>
+                        <span class="pin-label"><b>随笔</b><small>2</small></span>
+                    </a>
+                    <a class="atlas-pin" href="./index.html?category=%E5%85%AC%E5%91%8A" title="公告 · 1 篇"
+                       style="--x: 30; --y: 62; --tone: var(--mio-purple); --i: 3">
+                        <span class="pin-dot"><i></i></span>
+                        <span class="pin-label"><b>公告</b><small>1</small></span>
+                    </a>
+
+                    <!-- 还没被写到的坐标：虚线问号，纯装饰 -->
+                    <span class="atlas-unknown" style="--x: 14; --y: 46" title="还没有被写到的坐标">?</span>
+                    <span class="atlas-unknown" style="--x: 85; --y: 58" title="还没有被写到的坐标">?</span>
+                </div>
+
+                <!-- ③ 装饰层：罗盘 / 你在这里 / 提示 -->
+                <div class="atlas-compass" aria-hidden="true">
+                    <svg viewBox="0 0 64 64">
+                        <circle class="compass-ring" cx="32" cy="32" r="26"></circle>
+                        <circle class="compass-ring is-inner" cx="32" cy="32" r="17"></circle>
+                        <path class="compass-tick" d="M32 3 v7 M32 54 v7 M3 32 h7 M54 32 h7"></path>
+                        <path class="compass-needle" d="M32 12 L37 34 L32 42 L27 34 Z"></path>
+                        <circle class="compass-core" cx="32" cy="32" r="2.4"></circle>
+                    </svg>
+                </div>
+
+                <span class="atlas-you"><i></i>你在这里</span>
+                <span class="atlas-hint">点一下坐标就能出发</span>
+            </div>
+
+            <div class="hero-legend">
+                <span><i class="legend-route" aria-hidden="true"></i>系列 ＝ 一条路线</span>
+                <span><i class="legend-area" aria-hidden="true"></i>分类 ＝ 一片领地</span>
+                <span><i class="legend-glyph" aria-hidden="true">✦</i>标签 ＝ 散落的星标</span>
+                <span><i class="legend-glyph" aria-hidden="true">↺</i>时间 ＝ 一条航线</span>
+                <em>小提示：地图会跟着新文章一起长大 ✧</em>
+            </div>
+        </section>
+    </main>
+
+    <script src="./atlas-map.js?v=20261021-1"></script>
+</body>
+</html>
