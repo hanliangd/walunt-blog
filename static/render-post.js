@@ -31,15 +31,17 @@ async function loadRealArticles() {
         // 4. 描述（绝对安全，只用 textContent）
         const desc = document.createElement('p');
         desc.className = 'note-desc';
-        desc.textContent = `作者：${post.author}。点击查看完整正文...`;
-
+        const rawContent = post.content || "";
+        const cleanText = rawContent.replace(/[#*>\-\n]/g, ' ').trim();
+        desc.textContent = cleanText.slice(0 ,30) ? cleanText.slice(0, 30) + '...' : '点击查看完整正文...';
         // 5. 底部元信息（稍微复杂点，里面有图标）
         const meta = document.createElement('span');
         meta.className = 'note-meta';
                   
         const dateSpan = document.createElement('span');
         dateSpan.innerHTML = `<svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg> `;
-        dateSpan.appendChild(document.createTextNode('刚刚'));
+        const dateStr = post.created_at ? post.created_at.slice(0, 10) : '刚刚'
+        dateSpan.appendChild(document.createTextNode(dateStr));
 
         const tag = document.createElement('span');
         tag.className = 'note-tag';

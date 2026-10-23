@@ -98,6 +98,8 @@ class PostOut(BaseModel):
     title: str
     author: str
     id: int
+    content: str
+    created_at: str | None = None
 
 
 class PostCreat(BaseModel):
@@ -224,6 +226,7 @@ def get_posts():
                 "title": p.title,
                 "author": p.author.username,
                 "content": p.content,
+                "created_at": p.created_at,
             }
             for p in posts
         ]

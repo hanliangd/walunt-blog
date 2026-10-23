@@ -29,6 +29,7 @@ async function loadPostDetail() {
     contentEl.innerHTML = safeHtml;
     contentEl.classList.remove('note-loading'); // 移除加载提示样式
     renderIndex()
+    scrollTitle()
   }catch (e) {
     titleEl.textContent = "加载失败";
     contentEl.replaceChildren(); // 清空
@@ -72,4 +73,20 @@ function renderIndex() {
     })
     tocList.appendChild(a)                              // ← 注意是 tocList
   })
+}
+function scrollTitle(){
+  const tocList = document.getElementById('noteToc')
+  const heads   = contentEl.querySelectorAll('h2, h3') 
+  const links = [...tocList.children]
+  const obs = new IntersectionObserver((entries)=>{
+    for (const e of entries) {
+    if (!e.isIntersecting) continue
+    // 每次有一个标题进入视野，先把所有目录的高亮清空
+    links.forEach(l => l.classList.remove('is-active'))
+    // 找到与当前标题对应的那个目录链接，加高亮
+    const cur = links.find(l => l.hash === '#' + e.target.id)
+    if (cur) cur.classList.add('is-active')
+    }
+  }, { rootMargin: '-84px 0px -70% 0px' })// 顶部留出导航条的高度
+  heads.forEach(h => obs.observe(h))
 }
