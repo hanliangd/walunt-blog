@@ -10,3 +10,5 @@ static/img/pixiv_works_133187084_p0.png
 testmodeldata.py
 _backup/
 blog_orm.db
+.chroma/
+_before-rag.txt

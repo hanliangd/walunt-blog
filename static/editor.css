@@ -1,0 +1,112 @@
+.editor-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px;
+}
+.editor-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 20px;
+}
+.editor-title-input {
+  padding: 15px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  font-size: 18px;
+  width: 100%;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.2s;
+}
+/* 工具栏 */
+.editor-toolbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.editor-toolbar button {
+  padding: 6px 12px;
+  background: #f0f0f0;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition:
+    background 0.2s,
+    color 0.2s;
+}
+
+.editor-toolbar button:hover {
+  background: #e0e0e0;
+}
+
+/* 插入模板按钮单独的特殊样式 */
+.editor-toolbar .btn-template {
+  margin-left: auto;
+  background: #e8ebf0;
+  color: #667eea;
+  font-weight: bold;
+}
+
+/* 分栏布局的容器 */
+.editor-split {
+  display: flex;
+  gap: 20px;
+  height: 550px; /* 固定高度，方便内部滚动 */
+}
+.editor-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+/* 文本框自适应高度 */
+.editor-textarea {
+  flex: 1;
+  padding: 15px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  font-size: 15px;
+  font-family:
+    Consolas, Monaco, monospace; /* 等宽字体更适合写代码和 Markdown */
+  outline: none;
+  line-height: 1.6;
+  /* 👇 干点小三角的终极三连 */
+  resize: none; /* 禁止拖拽改变大小 */
+  appearance: none; /* 抹除浏览器默认外观 */
+  -webkit-appearance: none;
+  overflow-y: auto; /* 内容多了自动出滚动条 */
+}
+.editor-textarea:focus {
+  border-color: var(--indigo, #667eea);
+}
+/* 右侧预览区 */
+.editor-right {
+  flex: 1;
+  border: 1px dashed #ccc;
+  border-radius: 10px;
+  padding: 15px;
+  overflow-y: auto; /* 内容多了可以滚 */
+  background: #fafafa;
+  box-sizing: border-box;
+}
+/* 发布按钮 */
+.editor-submit-btn {
+  padding: 15px;
+  font-size: 16px;
+  width: 100%;
+  margin-top: 10px;
+}
+/* 美化编辑器里的滚动条 */
+.editor-textarea::-webkit-scrollbar {
+  width: 8px;
+}
+.editor-textarea::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 4px;
+}
+.editor-textarea::-webkit-scrollbar-track {
+  background: transparent;
+}

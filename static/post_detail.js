@@ -27,6 +27,8 @@ async function loadPostDetail() {
     const safeHtml = DOMPurify.sanitize(rawHtml)
     // 插入页面
     contentEl.innerHTML = safeHtml;
+    const firstH1 = contentEl.querySelector('h1')
+    if (firstH1) firstH1.remove()      // 页头已经显示过标题了
     contentEl.classList.remove('note-loading'); // 移除加载提示样式
     renderIndex()
     scrollTitle()
