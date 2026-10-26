@@ -19,6 +19,7 @@ from rate_limit import rate_limit_stream
 from models import Conversation, Message
 from generate_title import _fill_title
 import asyncio
+from rag import rag_search
 
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "blog.db"
@@ -372,9 +373,29 @@ async def chat_stream(
         history.reverse()
         while history and history[0].role != "user":
             history.pop(0)
+
+        # 去RAG库里查资料(扔给线程池)
+        hits = await asyncio.to_thread(rag_search, data.message, 3)
+
+        # 拼接查到的资料
+        context_text = ""
+        if hits:
+            context_text = "下面是作者自己的笔记，请参考这些内容回答问题：\n\n"
+            for h in hits:
+                source = h["meta"].get("source", "未知来源")
+                heading = h["meta"].get("heading", "无标题")
+                # 每块截断 600 字防止超限
+                context_text += f"【来自：{source}-{heading}】\n{h['doc'][:600]}\n\n"
+        # 组装给上游的格式
         messages_for_deepseek = [
-            {"role": msg.role, "content": msg.content} for msg in history
+            {
+                "role": "system",
+                "content": f"你是一个专属博客助手。如果用户的问题能在参考资料中找到，请依据资料回答；如果资料里没有，请如实说你不知道，不要瞎编。\n\n{context_text}",
+            }
         ]
+        # 把历史聊天记录追加到后面
+        for msg in history:
+            messages_for_deepseek.append({"role": msg.role, "content": msg.content})
 
     async def gen():
         try:

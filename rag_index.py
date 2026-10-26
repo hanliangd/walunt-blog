@@ -39,6 +39,11 @@ def split_md(text):
     pat = re.compile(r"^(#{2,3})\s+(.+)$", re.M)
     marks = list(pat.finditer(text))
     out = []
+    if not marks:  # ← 没有标题 → 整篇当一个块
+        body = text.strip()
+        if len(body) >= 20:
+            out.append(("（全文）", body))
+        return out
     for i, m in enumerate(marks):
         start = m.start()
         end = marks[i + 1].start() if i + 1 < len(marks) else len(text)

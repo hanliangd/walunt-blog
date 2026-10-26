@@ -1,8 +1,9 @@
 # 用法: python reset_password.py <用户名> <新密码>
 import sys
 from sqlalchemy import select
-from models import SessionLocal, User
+from models import SessionLocal, User, SessionToken
 from security import hash_password
+from sqlalchemy import delete
 
 if len(sys.argv) != 3:
     print("用法: python reset_password.py <用户名> <新密码>")
@@ -16,5 +17,6 @@ with SessionLocal() as session:
         print("没有这个用户:", username)
         sys.exit(1)
     user.password_hash = hash_password(new_password)
+    session.execute(delete(SessionToken).where(SessionToken.user_id == user.id))
     session.commit()
     print("已重置:", username)
