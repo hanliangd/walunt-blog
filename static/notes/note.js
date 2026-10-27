@@ -90,7 +90,13 @@
       return res.text()
     })
     .then(function (md) {
-      article.innerHTML = window.marked.parse(md, { gfm: true, breaks: false })
+      var rawHtml = window.marked.parse(md, { gfm: true, breaks: false })
+      if (window.DOMPurify) {
+        article.innerHTML = window.DOMPurify.sanitize(rawHtml)
+      } else {
+        // 万一 HTML 里忘了引入 DOMPurify，降级为纯文本显示，防止被黑
+        article.textContent = md 
+      }
       enhance()
       updateProgress()
     })

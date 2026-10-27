@@ -1,4 +1,4 @@
-import { streamChat } from './chat-api.js';
+import { streamChat } from './chat-api.js?v=20261027';
 const outDiv = document.getElementById('out')
 const msgInput = document.getElementById('msg')
 const sendBtn = document.getElementById('sent')
@@ -95,32 +95,54 @@ sendBtn.addEventListener('click', async ()=>{
   userDiv.className = 'user'
   userDiv.textContent = message
   outDiv.appendChild(userDiv)
-  // 渲染AI的信息
+  // 渲染AI汽包外壳
   const aiDiv = document.createElement('div')
   aiDiv.className ='ai'
-  const initialCursor = document.createElement('span')
-  initialCursor.className = 'cursor'
-  aiDiv.appendChild(initialCursor)
   outDiv.appendChild(aiDiv)
+  // 2. 创建“文字区” span（专门给打字机用）
+  const textSpan = document.createElement('span')
+  aiDiv.appendChild(textSpan)
+  // 4.加那个闪烁光标（挂在文字区后面）
+  const cursor = document.createElement('span')
+  cursor.className = 'cursor'
+  textSpan.appendChild(cursor)
+  // 3. 创建“引用区” div（专门给链接用）
+  const citationsDiv = document.createElement('div')
+  citationsDiv.className = 'citations-area'
+  aiDiv.appendChild(citationsDiv)
+  let aiReply = ''
   await streamChat(currentConversationId, message,{
+    // 1. 接收引用
+    onCitations: (cites) =>{
+      citationsDiv.replaceChildren(...cites.map((cite,index)=>{
+        const el = cite.url
+          ? Object.assign(document.createElement('a'), {
+              href: cite.url, target: '_blank', rel: 'noopener noreferrer'
+            })
+          : document.createElement('span')
+        el.className = 'citation-badge'
+        el.textContent = cite.title
+        return el
+       }
+      ))
+    },
     onChunk : (c) =>{
-      const oldCursor = aiDiv.querySelector('.cursor');
-      if (oldCursor) oldCursor.remove();
-      aiDiv.textContent += c
-      const newCursor = document.createElement('span')
-      newCursor.className = 'cursor';
-      aiDiv.appendChild(newCursor);
+      aiReply+=c
+      // 更新文字区，绝不碰引用区
+      textSpan.textContent = aiReply
       outDiv.scrollTop = outDiv.scrollHeight
     },
     onError: (e) => {
-      aiDiv.textContent += `\n[错误] ${e}`
+      const cursor = textSpan.querySelector('.cursor')
+      cursor.remove()
+      textSpan.textContent += `\n[错误] ${e}`
       if (String(e).includes('401')) {   
       setTimeout(() => { location.href = '/static/login.html?next=' + encodeURIComponent('/static/chat.html') }, 2000);
     }
     },
     onDone: async () => {
     // 流结束后，移除光标
-    const cursor = aiDiv.querySelector('.cursor');
+    const cursor = textSpan.querySelector('.cursor');
     if (cursor) cursor.remove();
     // 轮询检查deepseek生成的标题是否完成
     for (let i = 0; i < 3; i++) {
@@ -129,7 +151,7 @@ sendBtn.addEventListener('click', async ()=>{
       const current = convs.find(c => c.id === currentConversationId);
       if (current && current.title && current.title !== '新会话') break;
     }
-  }
+    }   
   })
   }finally{
    busy = false

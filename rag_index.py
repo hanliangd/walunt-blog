@@ -65,17 +65,28 @@ if __name__ == "__main__":
     ):
         for j, (h, chunk) in enumerate(split_md(content)):
             docs.append(chunk)
-            metas.append({"source": f"post:{title}", "heading": h})
+            metas.append(
+                {
+                    "source": f"post:{title}",
+                    "heading": h,
+                    "url": f"/static/post_detail.html?id={pid}",
+                }
+            )
             ids.append(f"post-{pid}-{j}")
     con.close()
 
     # 读笔记
     for path in glob.glob(os.path.join(NOTES, "*.md")):
+        # 在文件绝对地址中取出文件名
         name = os.path.basename(path)
+        # 1. 把 .md 替换成 .html
+        html_name = name.replace(".md", ".html")
+        # 2. 拼出前端能访问的 URL（/static/notes/踩坑记录.html）
+        note_url = f"/static/notes/{html_name}"
         text = open(path, encoding="utf-8").read()
         for j, (h, chunk) in enumerate(split_md(text)):
             docs.append(chunk)
-            metas.append({"source": f"notes/{name}", "heading": h})
+            metas.append({"source": f"notes/{name}", "heading": h, "url": note_url})
             ids.append(f"note-{name}-{j}")
 
     print("待写入块数:", len(docs))

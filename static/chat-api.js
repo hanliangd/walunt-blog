@@ -15,7 +15,7 @@ function createParser(onEvent){
   }
 }
 async function streamChat(conversationId, message,{onChunk=()=>{}, onError=(e)=>console.log(e)
-, onDone=()=>{}}){
+, onDone=()=>{},onCitations =()=>{}}){
 try{
   const decoder = new TextDecoder('utf-8')
   const res = await fetch('/api/chat/stream',{
@@ -42,6 +42,10 @@ try{
     try{
       const data = JSON.parse(payload)
       if (data.error) { onError(data.error); return }
+      if (data.type === 'citations') {
+        onCitations(data.data)
+        return
+      }
       onChunk(data.content)
     }catch(e){
       onError(e.message)

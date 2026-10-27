@@ -374,31 +374,42 @@ async def chat_stream(
         while history and history[0].role != "user":
             history.pop(0)
 
-        # 去RAG库里查资料(扔给线程池)
-        hits = await asyncio.to_thread(rag_search, data.message, 3)
+    # 去RAG库里查资料(扔给线程池)
+    hits = await asyncio.to_thread(rag_search, data.message, 3)
+    # 存储地址
+    citations = []
+    # 拼接查到的资料
+    if hits:
+        context_text = "下面是作者自己的笔记，请参考这些内容回答问题：\n\n"
+        seen_urls = set()  # 用来去重
+        for h in hits:
+            source = h["meta"].get("source", "未知来源")
+            heading = h["meta"].get("heading", "无标题")
+            url = h["meta"].get("url") or ""
 
-        # 拼接查到的资料
-        context_text = ""
-        if hits:
-            context_text = "下面是作者自己的笔记，请参考这些内容回答问题：\n\n"
-            for h in hits:
-                source = h["meta"].get("source", "未知来源")
-                heading = h["meta"].get("heading", "无标题")
+            # 👇 去重并打包成前端需要的格式
+            if url not in seen_urls:
+                # 清理一下标题，把 "notes/" 和 "post:" 去掉，看起来更干净
+                clean_title = source.replace("notes/", "").replace("post:", "")
+                citations.append({"title": clean_title, "url": url})
+                seen_urls.add(url)
                 # 每块截断 600 字防止超限
-                context_text += f"【来自：{source}-{heading}】\n{h['doc'][:600]}\n\n"
-        # 组装给上游的格式
-        messages_for_deepseek = [
-            {
-                "role": "system",
-                "content": f"你是一个专属博客助手。如果用户的问题能在参考资料中找到，请依据资料回答；如果资料里没有，请如实说你不知道，不要瞎编。\n\n{context_text}",
-            }
-        ]
-        # 把历史聊天记录追加到后面
-        for msg in history:
-            messages_for_deepseek.append({"role": msg.role, "content": msg.content})
+            context_text += f"【来自：{source}-{heading}】\n{h['doc'][:600]}\n\n"
+    # 组装给上游的格式
+    messages_for_deepseek = [
+        {
+            "role": "system",
+            "content": f"你是一个专属博客助手。如果用户的问题能在参考资料中找到，请依据资料回答；如果资料里没有，请如实说你不知道，不要瞎编。\n\n{context_text}",
+        }
+    ]
+    # 把历史聊天记录追加到后面
+    for msg in history:
+        messages_for_deepseek.append({"role": msg.role, "content": msg.content})
 
     async def gen():
         try:
+            if citations:
+                yield f"data:{json.dumps({'type':'citations','data':citations})}\n\n"
             async with httpx.AsyncClient(
                 timeout=httpx.Timeout(30.0, read=60.0)
             ) as client:
