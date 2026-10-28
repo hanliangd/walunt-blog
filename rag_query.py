@@ -1,11 +1,12 @@
 import os, chromadb
 from dotenv import load_dotenv
 from rag_index import DashScopeEmbedding  # 复用你写的那个类
+from pathlib import Path
 
 load_dotenv()
 emb = DashScopeEmbedding(os.getenv("MyDashscopeKey"))
 
-client = chromadb.PersistentClient(path=r"E:\测试\FastAPItest\.chroma")
+client = chromadb.PersistentClient(path=Path(__file__).resolve().parent / ".chroma")
 col = client.get_or_create_collection("blog", embedding_function=emb)
 print("库里有", col.count(), "块")
 

@@ -394,7 +394,7 @@ async def chat_stream(
                 citations.append({"title": clean_title, "url": url})
                 seen_urls.add(url)
                 # 每块截断 600 字防止超限
-            context_text += f"【来自：{source}-{heading}】\n{h['doc'][:600]}\n\n"
+            context_text += f"【来自：{source}-{heading}】\n{h['doc'][:1200]}\n\n"
     # 组装给上游的格式
     messages_for_deepseek = [
         {

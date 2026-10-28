@@ -1,12 +1,14 @@
 import httpx, re, sqlite3, glob, os, chromadb
 from chromadb import Documents, EmbeddingFunction, Embeddings
 from dotenv import load_dotenv
+from pathlib import Path
 
 load_dotenv()
 
-DB = r"E:\测试\FastAPItest\blog.db"
-NOTES = r"E:\测试\FastAPItest\static\notes"
-CHROMA = r"E:\测试\FastAPItest\.chroma"
+BASE = Path(__file__).resolve().parent
+DB = BASE / "blog.db"
+NOTES = BASE / "static" / "notes"
+CHROMA = BASE / ".chroma"
 
 
 class DashScopeEmbedding(EmbeddingFunction):
@@ -44,6 +46,10 @@ def split_md(text):
         if len(body) >= 20:
             out.append(("（全文）", body))
         return out
+    intro = text[: marks[0].start()]
+    intro = re.sub(r"^#\s+.*$", "", intro, count=1, flags=re.M).strip()  # 去掉 md 的 H1
+    if len(intro) >= 20:
+        out.append(("（前言）", intro))
     for i, m in enumerate(marks):
         start = m.start()
         end = marks[i + 1].start() if i + 1 < len(marks) else len(text)
@@ -59,7 +65,9 @@ if __name__ == "__main__":
     docs, metas, ids = [], [], []
 
     # 读posts
-    con = sqlite3.connect(f"file:{DB}?mode=ro", uri=True)
+    con = sqlite3.connect(
+        f"file:{DB.as_posix()}?mode=ro", uri=True
+    )  # ← .as_posix() 关键（SQLite URI 要正斜杠）
     for pid, title, content in con.execute(
         "SELECT id, title, content FROM posts WHERE status='published'"
     ):
@@ -92,7 +100,7 @@ if __name__ == "__main__":
     print("待写入块数:", len(docs))
 
     emb = DashScopeEmbedding(os.getenv("MyDashscopeKey"))
-    client = chromadb.PersistentClient(path=CHROMA)
+    client = chromadb.PersistentClient(path=str(CHROMA))
     try:
         client.delete_collection("blog")  # ② 换模型先删库
         print("旧库已删 ✓")
