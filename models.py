@@ -74,6 +74,7 @@ class Message(Base):
         CheckConstraint("role IN ('user', 'assistant')", name="ck_role_valid")
     )
     content: Mapped[str]
+    citations: Mapped[str | None] = mapped_column(default=None)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
 
 

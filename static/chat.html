@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>我的AI助手</title>
+  <link rel="stylesheet" href="./notes/note.css">
   <style>
   *{
     margin: 0;
@@ -133,13 +134,14 @@
     line-height: 1.5;
     font-size: 15px;
     word-wrap: break-word;
-    white-space: pre-wrap;
+    white-space: normal;
   }
   #out >div.user{
     align-self: flex-end;
     background: #667eea;
     color: #ffffff;
     border-bottom-right-radius: 4px;
+    white-space: pre-wrap;
   }
   #out >div.ai{
     align-self: flex-start;
@@ -147,6 +149,12 @@
     color: #333333;
     border-bottom-left-radius: 4px;
   }
+  /* AI 回答里的标题降级：气泡里不适合 22px 大标题 */
+  .ai.note-body { white-space: normal; line-height: 1.7; }      /* ← 关键 */
+  .ai.note-body p { margin: 6px 0; }
+  .ai.note-body h1, .ai.note-body h2 { font-size: 1.1em; margin: 14px 0 6px; border-bottom: none; }
+  .ai.note-body h3 { font-size: 1.02em; margin: 10px 0 4px; }
+  .ai.note-body ul, .ai.note-body ol { padding-left: 1.4em; margin: 6px 0; }
   .citations-area {
     margin-top: 10px;
     display: flex;
@@ -228,6 +236,8 @@
       </div>
     </main>
   </div>
-  <script type="module" src="./chat-ui.js?v=20261027"></script>
+  <script type="module" src="./chat-ui.js?v=20261028"></script>
+  <script src="./vendor/marked.min.js"></script>
+  <script src="./vendor/purify.min.js"></script>
 </body>
 </html>

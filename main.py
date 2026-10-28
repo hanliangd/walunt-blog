@@ -459,6 +459,11 @@ async def chat_stream(
                                 conversation_id=data.conversation_id,
                                 role="assistant",
                                 content=ai_reply,
+                                citations=(
+                                    json.dumps(citations, ensure_ascii=False)
+                                    if citations
+                                    else None
+                                ),
                             )
                             session.add(ai_msg)
                             session.commit()
@@ -533,4 +538,11 @@ def get_conversation_messages(
             .where(Message.conversation_id == conversation.id)
             .order_by(Message.id.asc())
         ).all()
-        return [{"role": msg.role, "content": msg.content} for msg in messages]
+        return [
+            {
+                "role": msg.role,
+                "content": msg.content,
+                "citations": json.loads(msg.citations) if msg.citations else [],
+            }
+            for msg in messages
+        ]

@@ -34,6 +34,19 @@ async function fetchConversations() {
   }
   
 }
+// 渲染引用连接
+function renderCitations(container, cites) {
+  container.replaceChildren(...cites.map((cite, index) => {
+    const el = cite.url
+      ? Object.assign(document.createElement('a'), {
+          href: cite.url, target: '_blank', rel: 'noopener noreferrer' 
+        })
+      : document.createElement('span')
+    el.className = 'citation-badge'
+    el.textContent = `[${index + 1}] ${cite.title}`;
+    return el
+  }))
+}
 // 切换会话并刷新历史
 async function switchConversation(conversationId) {
   currentConversationId = conversationId;
@@ -47,7 +60,22 @@ async function switchConversation(conversationId) {
       ...messages.map(msg => {
         const msgDiv = document.createElement('div');
         msgDiv.className = msg.role === 'user' ? 'user' : 'ai';
-        msgDiv.textContent = msg.content;
+        const textSpan = document.createElement('div');
+        msgDiv.appendChild(textSpan);
+        if (msg.role === 'assistant') {
+          textSpan.className = 'note-body'
+          textSpan.innerHTML = DOMPurify.sanitize(marked.parse(msg.content))
+        } 
+        else {
+          textSpan.textContent = msg.content
+        }
+        // 如果有引用，渲染到 msgDiv 里
+        if(msg.role === 'assistant' && msg.citations && msg.citations.length > 0){
+          const citDiv = document.createElement('div');
+          citDiv.className = 'citations-area';
+          renderCitations(citDiv, msg.citations);
+          msgDiv.appendChild(citDiv);
+        }
         return msgDiv;
       })
     );
@@ -97,13 +125,14 @@ sendBtn.addEventListener('click', async ()=>{
   outDiv.appendChild(userDiv)
   // 渲染AI汽包外壳
   const aiDiv = document.createElement('div')
-  aiDiv.className ='ai'
+  aiDiv.className = 'ai'
   outDiv.appendChild(aiDiv)
   // 2. 创建“文字区” span（专门给打字机用）
-  const textSpan = document.createElement('span')
+  const textSpan = document.createElement('div')
+  textSpan.className = 'note-body' 
   aiDiv.appendChild(textSpan)
-  // 4.加那个闪烁光标（挂在文字区后面）
-  const cursor = document.createElement('span')
+  // 4.加那个闪烁光标（挂在文字区后面）这里不能用const，后续错误路径要重新赋值
+  let cursor = document.createElement('span')
   cursor.className = 'cursor'
   textSpan.appendChild(cursor)
   // 3. 创建“引用区” div（专门给链接用）
@@ -111,38 +140,50 @@ sendBtn.addEventListener('click', async ()=>{
   citationsDiv.className = 'citations-area'
   aiDiv.appendChild(citationsDiv)
   let aiReply = ''
+  // 模块级初始变量
+  let lastRenderTime = 0 
   await streamChat(currentConversationId, message,{
     // 1. 接收引用
-    onCitations: (cites) =>{
-      citationsDiv.replaceChildren(...cites.map((cite,index)=>{
-        const el = cite.url
-          ? Object.assign(document.createElement('a'), {
-              href: cite.url, target: '_blank', rel: 'noopener noreferrer'
-            })
-          : document.createElement('span')
-        el.className = 'citation-badge'
-        el.textContent = cite.title
-        return el
-       }
-      ))
+    onCitations: (cites) => {
+      renderCitations(citationsDiv, cites); 
     },
     onChunk : (c) =>{
       aiReply+=c
-      // 更新文字区，绝不碰引用区
-      textSpan.textContent = aiReply
+      const now = Date.now()
+      // 每隔 80 毫秒才真正去解析和渲染一次 Markdown，防止浏览器卡死
+      if (now - lastRenderTime > 80) {
+        lastRenderTime = now;
+          
+        // 1. 把 Markdown 变成 HTML
+        const rawHtml = marked.parse(aiReply);
+        // 2. 净化 XSS
+        const safeHtml = DOMPurify.sanitize(rawHtml);
+        // 3. 塞进 textSpan
+        textSpan.innerHTML = safeHtml;
+          
+        // 4. innerHTML 会清空内部节点，必须把光标重新塞回末尾
+        if (!cursor) {
+            // 如果光标之前被删了，重新建一个
+            cursor = document.createElement('span');
+            cursor.className = 'cursor';
+          }
+      }
+      // 更新文字内容后，光标会被覆盖掉，必须重新塞回去
+      textSpan.appendChild(cursor)
       outDiv.scrollTop = outDiv.scrollHeight
     },
     onError: (e) => {
-      const cursor = textSpan.querySelector('.cursor')
-      cursor.remove()
+      if(cursor)cursor.remove()
       textSpan.textContent += `\n[错误] ${e}`
       if (String(e).includes('401')) {   
       setTimeout(() => { location.href = '/static/login.html?next=' + encodeURIComponent('/static/chat.html') }, 2000);
     }
     },
     onDone: async () => {
+    //流结束时，做最后一次终极渲染，确保最后一个字也被正确解析
+    const rawHtml = marked.parse(aiReply);
+    textSpan.innerHTML = DOMPurify.sanitize(rawHtml);
     // 流结束后，移除光标
-    const cursor = textSpan.querySelector('.cursor');
     if (cursor) cursor.remove();
     // 轮询检查deepseek生成的标题是否完成
     for (let i = 0; i < 3; i++) {
