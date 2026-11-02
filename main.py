@@ -123,16 +123,6 @@ def read_root():
     return {"message": "Hello FastAPI"}
 
 
-@app.get("/users/{user_id}")
-def get_user(user_id: int):
-    return {"id": user_id, "name": f"用户{user_id}"}
-
-
-@app.post("/users")
-def create_user(user: UserCreat):
-    return {"message": "用户创建成功", "user": user}
-
-
 @app.get("/api/homepage", response_model=HomepageResponse)
 def get_homepage():
     return {
@@ -211,12 +201,6 @@ async def chat(data: chatRequest, current_user: User = Depends(get_current_user)
     return {"reply": reply}
 
 
-@app.get("/api/get", response_model=list[UserOut])
-def get_users():
-    with SessionLocal() as session:
-        return session.scalars(select(User)).all()
-
-
 @app.get("/api/post", response_model=list[PostOut])
 def get_posts():
     with SessionLocal() as session:
@@ -231,16 +215,6 @@ def get_posts():
             }
             for p in posts
         ]
-
-
-@app.get("/api/users/{user_id}/post")
-def get_user_posts(user_id: int):
-    with SessionLocal() as session:
-        user = session.get(User, user_id)
-        if not user:
-            raise HTTPException(404, "用户不存在")
-        else:
-            return [p.title for p in user.posts]
 
 
 @app.post("/api/post", status_code=201)
