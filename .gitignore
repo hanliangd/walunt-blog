@@ -12,3 +12,7 @@ _backup/
 blog_orm.db
 .chroma/
 _before-rag.txt
+# 编辑器：只提交共享配置，其余一律不提交
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json

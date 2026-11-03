@@ -6,30 +6,51 @@
     "**/__pycache__",
     "**/.venv"
   ],
-  // ② Pylance 只分析“打开的文件”——对性能影响最大的一条
+  // ② Pylance 只分析"打开的文件"——对性能影响最大的一条
   "python.analysis.diagnosticMode": "openFilesOnly",
 
-  // ③ 文件监听器别盯大目录（“整机卡”的主因之一）
+  // ③ 文件监听器别盯大目录（"整机卡"的主因之一）
   "files.watcherExclude": {
     "**/.git/objects/**": true,
     "**/static/img/**": true,
     "**/__pycache__/**": true,
-    "**/*.db": true
+    "**/*.db": true,
+    "**/.venv/**": true
   },
 
-  // ④ 资源管理器里不显示编译产物
+  // ④ 资源管理器里不显示编译产物 + .venv（405MB，别拖慢侧边栏）
   "files.exclude": {
     "**/__pycache__": true,
-    "**/*.pyc": true
+    "**/*.pyc": true,
+    "**/.venv": true
   },
 
   // ⑤ 全局搜索（Ctrl+Shift+F）不扫媒体
   "search.exclude": {
     "**/static/img": true,
-    "**/.git": true
+    "**/.git": true,
+    "**/.venv": true
   },
 
-  // ⑥ 学习期关掉 AI 自动补全（2026-10-17）——它会在你写到一半时插代码，打断推导
+  // ⑥ 学习期关掉 AI 自动补全（2026-10-17）
   //    想恢复：删掉下面这一行，或把它改成 true
-  "editor.inlineSuggest.enabled": false
+  "editor.inlineSuggest.enabled": false,
+
+  // ⑦ C/C++ 扩展别分析 .venv 里的 C 头文件（greenlet.h 那类误报的根治）
+  "C_Cpp.files.exclude": {
+    "**/.venv/**": true
+  },
+
+  // ⑧ 默认解释器 = .venv（新开终端自动激活，不用再手敲 Activate.ps1）
+  "python.defaultInterpreterPath": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
+  "python.terminal.activateEnvironment": true,
+  "python.terminal.activateEnvInCurrentTerminal": true,
+
+  "python-envs.pythonProjects": [
+    {
+      "path": ".",
+      "envManager": "ms-python.python:venv",
+      "packageManager": "ms-python.python:pip"
+    }
+  ]
 }
