@@ -65,8 +65,38 @@ flowchart TD
 确保你安装了Python 3.10+。克隆项目并安装依赖：
 
 ```bash
-git clone https://github.com/yourname/you-repo.git
-cd your-repo
+git clone https://github.com/hanliangd/walunt-blog.git
+cd  walunt-blog
+```
+
+建虚拟环境（**别装进系统 Python**）：
+
+```bash
+python -m venv .venv
+```
+
+激活它——**Windows PowerShell**：
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+> 如果报「禁止运行脚本」，改用 `.\.venv\Scripts\activate.bat`， 或者干脆不激活，直接用虚拟环境里的解释器（下面所有 `python`/`uvicorn` 都换成这个）：
+>
+> ```powershell
+> .\.venv\Scripts\python.exe -m pip install -r requirements.txt
+> .\.venv\Scripts\python.exe -m uvicorn main:app --reload`
+> ```
+
+**macOS / Linux**：
+
+```bash
+source .venv/bin/activate
+```
+
+确认提示符前面出现了 `(.venv)`，然后装依赖:
+
+```bash
 pip install -r requirements.txt
 ```
 
@@ -77,6 +107,8 @@ pip install -r requirements.txt
 ```bash
 cp .env.example .env
 ```
+
+> Windows 用户如果 `cp` 命令不生效，换成 `copy .env.example .env`
 
 需要配置的变量：
 
