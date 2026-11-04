@@ -23,12 +23,14 @@ from rag import rag_search
 
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "blog.db"
+NOTES_DIR = Path(__file__).resolve().parent / "学习笔记"
+
 static_dir = Path(__file__).resolve().parent / "static"
 load_dotenv()
 Mykey = os.getenv("MydeepseekKey")
 app = FastAPI()
 app.mount("/static", StaticFiles(directory=str(static_dir), html=True), name="static")
-
+app.mount("/notes", StaticFiles(directory=str(NOTES_DIR)), name="notes")
 _bg_tasks: set = set()  # 关键：不留引用，任务可能被 GC 掉
 
 
