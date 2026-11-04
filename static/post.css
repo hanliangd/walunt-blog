@@ -13,8 +13,7 @@
    ========================================================= */
 
 /* ---------------------------------------------------------
-   0) 页面底色（和 index 的全屏图不同：这里用柔光渐变，
-      玻璃卡片才透得出来）
+   0) 页面背景：沿用首页插画，并叠加主题遮罩，让玻璃卡片透出背景
    --------------------------------------------------------- */
 .post-page {
   min-height: 100vh;
@@ -26,20 +25,16 @@
   inset: 0;
   z-index: -1;
   background:
-    radial-gradient(52% 42% at 14% 0%, #e6ebff 0%, transparent 62%),
-    radial-gradient(48% 40% at 88% 8%, #fbe8f4 0%, transparent 60%),
-    radial-gradient(60% 50% at 50% 100%, #e9f3ff 0%, transparent 65%),
-    linear-gradient(165deg, #f7f8fc 0%, #eef1f8 52%, #f6f2f8 100%);
+    linear-gradient(rgba(235, 239, 250, 0.08), rgba(235, 239, 250, 0.08)),
+    url("./img/小爱-bg.jpg") center / cover no-repeat;
 }
 [data-theme="dark"] .post-page {
   background: #0d1220;
 }
 [data-theme="dark"] .post-bg {
   background:
-    radial-gradient(52% 42% at 14% 0%, #1b2542 0%, transparent 62%),
-    radial-gradient(48% 40% at 88% 8%, #2a1b33 0%, transparent 60%),
-    radial-gradient(60% 50% at 50% 100%, #10243a 0%, transparent 65%),
-    linear-gradient(165deg, #0b1020 0%, #0d1220 52%, #120e1a 100%);
+    linear-gradient(rgba(7, 10, 22, 0.52), rgba(7, 10, 22, 0.52)),
+    url("./img/小爱-bg.jpg") center / cover no-repeat;
 }
 
 /* ---------------------------------------------------------
@@ -301,6 +296,16 @@
 }
 .card.post-list {
   padding: clamp(16px, 2.8vw, 30px);
+  background-color: rgba(255, 255, 255, 0.32);
+}
+.post-list .card.note-card {
+  background-color: rgba(255, 255, 255, 0.24);
+}
+[data-theme="dark"] .card.post-list {
+  background-color: rgba(30, 41, 59, 0.46);
+}
+[data-theme="dark"] .post-list .card.note-card {
+  background-color: rgba(30, 41, 59, 0.3);
 }
 .post-section-head {
   display: flex;
