@@ -13,7 +13,7 @@ from sqlalchemy.exc import IntegrityError
 import secrets
 from datetime import datetime, timedelta
 from dependencies import get_current_user
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, RedirectResponse
 import json
 from rate_limit import rate_limit_stream
 from models import Conversation, Message
@@ -120,9 +120,9 @@ class UserLogin(BaseModel):
     password: str
 
 
-@app.get("/")
+@app.get("/", include_in_schema=False)
 def read_root():
-    return {"message": "Hello FastAPI"}
+    return RedirectResponse("/static/index.html", status_code=307)
 
 
 @app.get("/api/homepage", response_model=HomepageResponse)
