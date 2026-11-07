@@ -239,9 +239,94 @@ curl -o /dev/null -w "%{http_code}\n" http://127.0.0.1/
 
 ## 7.更新代码的流程
 
-- 改 .py   → scp + systemctl restart walunt
+### 7.1 先判断：传完要不要重启
 
-- 改 static → scp + 浏览器 Ctrl+Shift+R（不用重启）
+| 你改了什么 | 传完做什么 |
+|---|---|
+| **`.py`**（main.py / rag.py …） | ✅ **`systemctl restart walunt`** |
+| **`static/`** 下的 html / css / js / 图片 | ❌ 不用重启 → 浏览器 **`Ctrl+Shift+R`** |
+| **`学习笔记/*.md`** | ❌ 不用重启 → 硬刷新 |
+| **`.env`** | ✅ **`chmod 600`** + 重启（`load_dotenv()` 只在启动时读）|
+| **`requirements.txt`** | ✅ `.venv/bin/pip install -r ...` → 再重启 |
+| **`blog.db` / `.chroma`** | ⚠️ 见 **7.4** —— **只从服务器拉，不要往上推** |
+
+**一句话判据**：
+
+> 改的是「**代码 / 配置 / 数据**」→ **重启**
+> 改的是「**静态资源**」（`.md` 也算静态）→ **硬刷新**
+
+### 7.2 怎么传：看文件数量
+
+| 情况 | 方法 | 原因 |
+|---|---|---|
+| **1~5 个文件** | **直接 `scp`** | 一条命令，不用解压 ✓ |
+| **一个目录 / >10 个文件** | **`tar` 打包** | 一条命令传完，且**保住目录结构和中文名** ✓ |
+| **`.chroma` 这类隐藏目录** | **必须打包** | `scp -r` 容易漏（`.` 开头的）✗ |
+
+**`scp` 传不了目录**（要加 `-r`，而 `-r` 碰中文目录容易出问题 ✗）→ **目录一律打包** ✓
+
+### 7.3 具体命令
+
+```powershell
+# ① 单个文件（改了一个 py / 一个 css）
+scp E:\测试\FastAPItest\main.py root@139.224.251.149:/opt/walunt/
+scp E:\测试\FastAPItest\static\post.css root@139.224.251.149:/opt/walunt/static/
+
+# ② 几张图，一行传完
+scp E:\测试\FastAPItest\static\img\a.png E:\测试\FastAPItest\static\img\b.jpg root@139.224.251.149:/opt/walunt/static/img/
+
+# ③ 一个目录（笔记 / static）
+tar -czf E:\notes.tar.gz -C "E:\测试\FastAPItest" 学习笔记
+scp E:\notes.tar.gz root@139.224.251.149:/opt/walunt/
+
+# ④ .env（改完必须重设权限）
+scp E:\测试\FastAPItest\.env root@139.224.251.149:/opt/walunt/
+```
+
+```bash
+# 服务器上：解压（会覆盖同名文件）
+cd /opt/walunt && tar -xzf notes.tar.gz
+
+chmod 600 /opt/walunt/.env          # 只在改了 .env 时
+
+systemctl restart walunt            # 只有改了 .py / .env / 数据 才需要
+sleep 8                             # ★ 启动要 4~5 秒，sleep 3 太早会误判
+curl -o /dev/null -w "%{http_code}\n" http://127.0.0.1/
+```
+
+**习惯**：解压完**立刻删压缩包**
+
+```bash
+rm -f /opt/walunt/*.tar.gz /opt/walunt/*.zip
+```
+
+### 7.4 🔴 数据方向：只出不进
+
+| 文件 | 现在哪份是真的 |
+|---|---|
+| **`blog.db`** | **服务器上的**（部署之后发的文章、聊的天都在那）|
+| **`.chroma`** | 看最后一次 `rag_index.py` 在哪跑的 |
+| **`.env`** | 两边各一份，内容一致（除非改过其中一个）|
+
+→ 本地那份 `blog.db` 是 **2026-11-06 部署时的快照** ✓ 里面**没有**你之后发的内容
+→ **如果习惯性 `scp blog.db` 推上去 ✗ → 服务器上的新数据被旧快照覆盖 → 全丢** ✗✗
+
+```bash
+# 要备份 → 从服务器【拉下来】
+scp root@139.224.251.149:/opt/walunt/blog.db E:\backup\blog-20261108.db
+```
+
+> **规则：数据只「从服务器往外拷」，永不「从本地往里推」。**
+> 唯一例外：明确要回滚到某个旧快照时 —— 那也要**先把当前的备份走** ✓
+
+### 7.5 日常维护
+
+```bash
+df -h /                                # 磁盘到 70% 再看
+ls -lh /var/log/walunt*.log            # 日志会一直涨
+journalctl --vacuum-size=100M          # 清 systemd 日志
+truncate -s 0 /var/log/walunt.log      # 清空应用日志（不用停服务）
+```
 
 ## 8.如果出问题，按这个顺序排查
 
