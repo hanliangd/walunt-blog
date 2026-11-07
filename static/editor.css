@@ -110,3 +110,80 @@
 .editor-textarea::-webkit-scrollbar-track {
   background: transparent;
 }
+.editor-title-input,
+.editor-textarea,
+.editor-right {
+  background: rgba(255, 255, 255, 0.42);
+  border-color: rgba(255, 255, 255, 0.55);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+.editor-toolbar button {
+  background: rgba(255, 255, 255, 0.38);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* 左上角返回入口：轻薄玻璃胶囊 */
+.editor-back {
+  position: fixed;
+  top: 18px;
+  left: max(16px, calc((100vw - 1080px) / 2));
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 42px;
+  padding: 0 16px;
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.48);
+  color: #334155;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.16);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transition:
+    transform 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.editor-back > span:first-child {
+  color: var(--indigo, #6366f1);
+  font-size: 18px;
+  line-height: 1;
+}
+.editor-back:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.64);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.22);
+}
+.editor-back:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--indigo, #6366f1) 55%, white);
+  outline-offset: 3px;
+}
+[data-theme="dark"] .editor-back {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(30, 41, 59, 0.68);
+  color: #e2e8f0;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.36);
+}
+[data-theme="dark"] .editor-back:hover {
+  background: rgba(51, 65, 85, 0.82);
+}
+@media (max-width: 768px) {
+  .editor-back {
+    top: 12px;
+    left: 12px;
+    min-height: 38px;
+    padding: 0 13px;
+    font-size: 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .editor-back {
+    transition: none;
+  }
+}

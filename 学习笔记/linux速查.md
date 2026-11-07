@@ -26,6 +26,8 @@
 | `ls` | `ls /opt/walunt` | 目录里有什么 |
 | `ls -l` | `ls -l /opt/walunt` | 带权限/大小/时间 |
 | `ls -lh` | `ls -lh /opt/walunt/static/img` | 大小用人看得懂的单位（M/G） |
+| **`ls -la`** | `ls -la /opt/walunt` | **连隐藏文件一起看**（`.env` / `.venv` / `.chroma` 都是隐藏的，不加 `-a` 看不到 ✗） |
+| **`ls -lA`** | `ls -lA /opt/walunt` | 同上，但不显示 `.` 和 `..`（**一般用这个**） |
 | `ls -ld` | `ls -ld /opt/walunt` | 看**目录本身**，不列内容 |
 | `cd` | `cd /opt/walunt` | 进目录 |
 | `pwd` | `pwd` | 我现在在哪个目录 |
@@ -141,6 +143,7 @@
 | 命令 | 例子 | 干什么 |
 |---|---|---|
 | `tar -xzf -C` | `tar -xzf /opt/walunt/walunt.tar.gz -C /opt/walunt` | 解 tar.gz（**大写 C** 是目标目录） |
+| `tar -xzf`（先 `cd`）| `cd /opt/walunt && tar -xzf notes.tar.gz` | 等价写法：**先切目录就不用 `-C`** ✓ |
 | `tar -czf` | `tar -czf /tmp/img.tar.gz -C /opt/walunt/static img` | 打 tar.gz |
 | `tar -tzf` | `tar -tzf /opt/walunt/walunt.tar.gz \| head -20` | 不解压，先看里面有什么 |
 | `unzip -o -d` | `unzip -o /opt/walunt/chroma.zip -d /opt/walunt` | 解 zip（**小写 d** 是目标目录） |

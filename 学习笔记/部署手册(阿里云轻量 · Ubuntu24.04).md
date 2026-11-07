@@ -4,8 +4,6 @@
 >
 > 实测日期：2026-11-06
 
-
-
 ## 0.前置信息
 
 - 服务器：阿里云轻量 2核2G / 40G / 上海 / Ubuntu 24.04
@@ -16,13 +14,9 @@
 
 - 日志：`/var/log/walunt.log, /var/log/walunt.err.log`
 
-
-
 ## 1.服务器防火墙
 
 **放行 TCP 22 / 80（给 ssh 和网站）**
-
-
 
 ## 2.服务器创建目录
 
@@ -58,7 +52,7 @@ git archive --format=tar.gz -o E:\walunt.tar.gz HEAD
 - 输出文件为 `E:\walunt.tar.gz`
 - 只包含 Git 跟踪的文件，不包含未提交或未跟踪文件
 
-scp E:\walunt.tar.gz root@IP:/opt/walunt/
+
 
 ```powershell
 scp E:\walunt.tar.gz root@IP:/opt/walunt/
@@ -95,8 +89,6 @@ scp E:\chroma.zip root@IP:/opt/walunt/
 ```
 
 同上，这条命令用于通过 SCP 将本地文件复制到远程服务器
-
-
 
 服务器(准备运行环境、解压应用包并保护环境变量文件)：
 
@@ -185,8 +177,6 @@ ls -d /opt/walunt/.chroma      # 确认目录存在
 /opt/walunt/.venv/bin/python -c "import main, rag, models; print('OK')"
 ```
 
-
-
 ## 5.systemd
 
 ```bash
@@ -214,8 +204,6 @@ pkill -f "uvicorn main:app"
 systemctl daemon-reload
 systemctl enable --now walunt
 systemctl is-active walunt
-
-
 ```
 
 创建 `walunt.service`，以 root 身份在 `/opt/walunt` 目录下加载 `.env`，通过虚拟环境启动 Uvicorn 应用，监听 `0.0.0.0:80`，并设置自动重启与日志追加；随后停止旧 Uvicorn 进程、重载 systemd、开机自启并立即启动服务，最后检查运行状态。
@@ -248,8 +236,6 @@ curl -o /dev/null -w "%{http_code}\n" http://127.0.0.1/
 - `http://127.0.0.1/`：请求目标是本机回环地址的根路径，通常用于检测本机 80 端口上的 HTTP 服务是否可访问。
 
 整体作用：访问 `http://127.0.0.1/`，不显示响应正文，只打印类似 `200`、`404`、`000` 的 HTTP 状态码。
-
-
 
 ## 7.更新代码的流程
 
@@ -290,5 +276,3 @@ ss -lntp | grep :80
    - `-t`：仅显示 TCP
    - `-p`：显示对应进程
    - `grep :80`：过滤出包含 `:80` 的内容；注意它也可能匹配 `:8080` 等端口，精确检查 80 端口可结合 `ss -lntp 'sport = :80'`
-
-

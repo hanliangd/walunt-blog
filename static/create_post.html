@@ -1,128 +1,149 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>写文章 - 宝藏之地</title>
-    <link rel="stylesheet" href="./base修改版.css">
-    <link rel="stylesheet" href="./card.css">
+    <link rel="stylesheet" href="./base修改版.css" />
+    <link rel="stylesheet" href="./card.css" />
     <!-- 借用一下你刚才的 post.css 里面的大卡片样式 -->
-    <link rel="stylesheet" href="./post.css">
+    <link rel="stylesheet" href="./post.css" />
     <!-- 引入笔记页的排版样式，为了让右侧预览长得和最终文章页一模一样 -->
-    <link rel="stylesheet" href="./notes/note.css">
-    <link rel="stylesheet" href="./editor.css">
+    <link rel="stylesheet" href="./notes/note.css" />
+    <link rel="stylesheet" href="./editor.css" />
     <script src="./theme-toggle.js?v=20261106-1"></script>
   </head>
-<body class="post-page">
-    <main class="post-main" style="margin-top: 50px;">
-        <section class="card post-start editor-container" >
-            <h2>发布新文章(Markdown 模式)</h2>
-            <form id="postForm" class="editor-form">
-                <input type="text" id="title" class="editor-title-input" placeholder="输入文章标题" required >
-                
-                <!--工具栏-->
-                <div class="editor-toolbar">
-                    <button type="button" id="btnH2">H2 标题</button>
-                    <button type="button" id="btnBold">** 加粗</button>
-                    <button type="button" id="btnCode">` 行内代码</button>
-                    <button type="button" id="btnList">- 列表</button>
-                    <button type="button" id="btnBlock">``` 代码块</button>
-                    <button type="button" id="btnTpl" class="btn-template">✨ 插入骨架模板</button>
-                </div>
+  <body class="post-page">
+    <div class="post-bg" aria-hidden="true"></div>
+    <a class="editor-back" href="./post.html" aria-label="返回文章列表">
+      <span aria-hidden="true">←</span>
+      <span>返回文章列表</span>
+    </a>
+    <main class="post-main" style="margin-top: 50px">
+      <section class="card post-start editor-container">
+        <h2>发布新文章(Markdown 模式)</h2>
+        <form id="postForm" class="editor-form">
+          <input
+            type="text"
+            id="title"
+            class="editor-title-input"
+            placeholder="输入文章标题"
+            required
+          />
 
-                <!-- 分栏编辑区 -->
-                <div class="editor-split">
-                    <!-- 左边：写 Markdown -->
-                    <div class="editor-left">
-                        <textarea id="content" class="editor-textarea" placeholder="输入正文内容...(支持 Markdown 语法)" required >
-        
-                        </textarea>
-                        <span id="wordCount"></span>
-                    </div>
-                    <!-- 右边：实时预览 -->
-                    <div class="editor-right note-body" id="preview">
-                        <p style="color: #999; text-align: center; margin-top: 20px;">右侧会实时显示文章排版效果...</p>
-                    </div>
-                </div>
-                <button type="submit" class="new-chat-btn">
-                    确认发布
-                </button>
-            </form>
-        </section>
+          <!--工具栏-->
+          <div class="editor-toolbar">
+            <button type="button" id="btnH2">H2 标题</button>
+            <button type="button" id="btnBold">** 加粗</button>
+            <button type="button" id="btnCode">` 行内代码</button>
+            <button type="button" id="btnList">- 列表</button>
+            <button type="button" id="btnBlock">``` 代码块</button>
+            <button type="button" id="btnTpl" class="btn-template">
+              ✨ 插入骨架模板
+            </button>
+          </div>
+
+          <!-- 分栏编辑区 -->
+          <div class="editor-split">
+            <!-- 左边：写 Markdown -->
+            <div class="editor-left">
+              <textarea
+                id="content"
+                class="editor-textarea"
+                placeholder="输入正文内容...(支持 Markdown 语法)"
+                required
+              >
+              </textarea>
+              <span id="wordCount"></span>
+            </div>
+            <!-- 右边：实时预览 -->
+            <div class="editor-right note-body" id="preview">
+              <p style="color: #999; text-align: center; margin-top: 20px">
+                右侧会实时显示文章排版效果...
+              </p>
+            </div>
+          </div>
+          <button type="submit" class="new-chat-btn">确认发布</button>
+        </form>
+      </section>
     </main>
     <!-- 引入 Markdown 解析和防 XSS 的库 -->
     <script src="./vendor/marked.min.js"></script>
     <script src="./vendor/purify.min.js"></script>
     <script>
-        // 编辑器工具栏逻辑
-        function wrap(before, after = before){
-            const el = document.getElementById('content');
-            const { selectionStart: s, selectionEnd: e } = el;
-            const picked = el.value.slice(s, e) || '文字';
-            el.setRangeText(before + picked + after, s, e, 'end');
-            el.focus();
-            el.dispatchEvent(new Event('input')); // 触发实时预览刷新    
-        } 
+      // 编辑器工具栏逻辑
+      function wrap(before, after = before) {
+        const el = document.getElementById("content");
+        const { selectionStart: s, selectionEnd: e } = el;
+        const picked = el.value.slice(s, e) || "文字";
+        el.setRangeText(before + picked + after, s, e, "end");
+        el.focus();
+        el.dispatchEvent(new Event("input")); // 触发实时预览刷新
+      }
 
-        document.getElementById('btnH2').onclick   = () => wrap('## ', '');
-        document.getElementById('btnBold').onclick = () => wrap('**');
-        document.getElementById('btnCode').onclick = () => wrap('`');
-        document.getElementById('btnList').onclick = () => wrap('- ', '');
-        document.getElementById('btnBlock').onclick = () => wrap('```\n', '\n```');
+      document.getElementById("btnH2").onclick = () => wrap("## ", "");
+      document.getElementById("btnBold").onclick = () => wrap("**");
+      document.getElementById("btnCode").onclick = () => wrap("`");
+      document.getElementById("btnList").onclick = () => wrap("- ", "");
+      document.getElementById("btnBlock").onclick = () =>
+        wrap("```\n", "\n```");
 
-        // 2. 插入骨架模板逻辑
-        document.getElementById('btnTpl').onclick = () => {
-            const el = document.getElementById('content');
-            if (el.value.trim() && !confirm('这会覆盖当前内容，继续？')) return;
-            el.value = `## 一、我遇到的现象\n\n- **现象**：\n- **原因**：\n- **修法**：\n\n## 二、第二个问题\n\n- **现象**：\n- **原因**：\n- **修法**：\n\n## 三、结论\n\n一句话总结：\n`;
-            el.dispatchEvent(new Event('input'));
-        };
+      // 2. 插入骨架模板逻辑
+      document.getElementById("btnTpl").onclick = () => {
+        const el = document.getElementById("content");
+        if (el.value.trim() && !confirm("这会覆盖当前内容，继续？")) return;
+        el.value = `## 一、我遇到的现象\n\n- **现象**：\n- **原因**：\n- **修法**：\n\n## 二、第二个问题\n\n- **现象**：\n- **原因**：\n- **修法**：\n\n## 三、结论\n\n一句话总结：\n`;
+        el.dispatchEvent(new Event("input"));
+      };
 
-        // 3.实时预览逻辑
-        const ta = document.getElementById('content');
-        const pv = document.getElementById('preview');
+      // 3.实时预览逻辑
+      const ta = document.getElementById("content");
+      const pv = document.getElementById("preview");
 
-        ta.addEventListener('input' ,()=>{
-            if (!ta.value.trim()) {
-                pv.innerHTML = '<p style="color: #999; text-align: center; margin-top: 20px;">右侧会实时显示文章排版效果...</p>';
-                document.getElementById('wordCount').textContent = '共 0 字';   // ← 归零
-                return;
+      ta.addEventListener("input", () => {
+        if (!ta.value.trim()) {
+          pv.innerHTML =
+            '<p style="color: #999; text-align: center; margin-top: 20px;">右侧会实时显示文章排版效果...</p>';
+          document.getElementById("wordCount").textContent = "共 0 字"; // ← 归零
+          return;
+        }
+        pv.innerHTML = DOMPurify.sanitize(marked.parse(ta.value));
+        const chars = pv.textContent.replace(/\s/g, "").length;
+        document.getElementById("wordCount").textContent = `共 ${chars} 字`;
+      });
+
+      document
+        .getElementById("postForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const title = document.getElementById("title").value;
+          const content = document.getElementById("content").value;
+
+          try {
+            const res = await fetch("/api/post", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ title, content }),
+            });
+
+            if (res.status === 401) {
+              alert("请先登录！");
+              location.href =
+                "./login.html?next=" + encodeURIComponent("./create_post.html");
+              return;
             }
-            pv.innerHTML = DOMPurify.sanitize(marked.parse(ta.value));
-            const chars = pv.textContent.replace(/\s/g, '').length;  
-            document.getElementById('wordCount').textContent = `共 ${chars} 字`
-        })
 
-        document.getElementById('postForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const title = document.getElementById('title').value;
-            const content = document.getElementById('content').value;
-
-
-            try {
-                const res = await fetch('/api/post', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ title, content })
-                });
-
-                if (res.status === 401) {
-                    alert("请先登录！");
-                    location.href = './login.html?next=' + encodeURIComponent('./create_post.html');
-                    return;
-                }
-
-                if (res.ok) {
-                    alert("发布成功！");
-                    // 发布成功后跳转到列表页（这里先随便跳，等你写好了列表页再改）
-                    location.href = './post.html'; 
-                } else {
-                    alert("发布失败，请检查输入");
-                }
-            } catch (err) {
-                console.error(err);
-                alert("网络错误");
+            if (res.ok) {
+              alert("发布成功！");
+              // 发布成功后跳转到列表页（这里先随便跳，等你写好了列表页再改）
+              location.href = "./post.html";
+            } else {
+              alert("发布失败，请检查输入");
             }
+          } catch (err) {
+            console.error(err);
+            alert("网络错误");
+          }
         });
     </script>
-</body>
+  </body>
 </html>
