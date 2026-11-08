@@ -16,3 +16,5 @@ _before-rag.txt
 .vscode/*
 !.vscode/settings.json
 !.vscode/extensions.json
+_draft.py
+blog.db.bak

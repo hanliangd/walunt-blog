@@ -13,7 +13,7 @@ from sqlalchemy.exc import IntegrityError
 import secrets
 from datetime import datetime, timedelta
 from dependencies import get_current_user
-from fastapi.responses import StreamingResponse, RedirectResponse
+from fastapi.responses import StreamingResponse, RedirectResponse, FileResponse
 import json
 from rate_limit import rate_limit_stream
 from models import Conversation, Message
@@ -24,13 +24,27 @@ from rag import rag_search
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "blog.db"
 NOTES_DIR = Path(__file__).resolve().parent / "学习笔记"
-
+NOTE_PUBLIC = {"踩坑记录", "工作日志", "进度", "反思-业务逻辑分层"}
 static_dir = Path(__file__).resolve().parent / "static"
+BASE_PROMPT = """你是一个专属博客助手，服务对象是这位博客的作者和他的读者。
+
+回答规则（严格遵守）：
+1. 如果【参考资料】里有相关内容 → 严格依据参考资料回答，可以引用。
+2. 如果没有【参考资料】，或资料里没有相关内容：
+   - 若用户问的是【作者笔记 / 文章 / 项目 / 这一版代码】的内容 → 明确说"我的笔记里没有这部分内容"，不要编造。
+   - 若用户问的是【通用问题】（技术、常识、写作、闲聊） → 用你自己的知识正常回答，但要说明这不是来自作者笔记。
+3. 任何时候都不要编造"作者笔记里说过什么"。
+"""
 load_dotenv()
 Mykey = os.getenv("MydeepseekKey")
-app = FastAPI()
+ALLOW_REGISTER = os.getenv("ALLOW_REGISTER", "0") == "1"
+ENABLE_DOCS = os.getenv("ENABLE_DOCS", "0") == "1"
+app = FastAPI(
+    docs_url="/docs" if ENABLE_DOCS else None,
+    redoc_url="/redoc" if ENABLE_DOCS else None,
+    openapi_url="/openapi.json" if ENABLE_DOCS else None,
+)
 app.mount("/static", StaticFiles(directory=str(static_dir), html=True), name="static")
-app.mount("/notes", StaticFiles(directory=str(NOTES_DIR)), name="notes")
 _bg_tasks: set = set()  # 关键：不留引用，任务可能被 GC 掉
 
 
@@ -48,10 +62,6 @@ class UserCreat(BaseModel):
 class chatRequest(BaseModel):
     conversation_id: int
     message: str = Field(min_length=1, max_length=2000)
-
-
-class ChatResponse(BaseModel):
-    reply: str
 
 
 class profile(BaseModel):
@@ -125,6 +135,16 @@ def read_root():
     return RedirectResponse("/static/index.html", status_code=307)
 
 
+@app.get("/notes/{name}.md")
+def get_note_md(name: str):
+    if name not in NOTE_PUBLIC:
+        raise HTTPException(404, "笔记不存在")
+    p = NOTES_DIR / f"{name}.md"
+    if not p.is_file():
+        raise HTTPException(404, "笔记文件缺失")
+    return FileResponse(p, media_type="text/markdown; charset=utf-8")
+
+
 @app.get("/api/homepage", response_model=HomepageResponse)
 def get_homepage():
     return {
@@ -167,42 +187,6 @@ def get_homepage():
     }
 
 
-@app.post("/chat", response_model=ChatResponse)
-async def chat(data: chatRequest, current_user: User = Depends(get_current_user)):
-    if not Mykey:
-        raise HTTPException(500, "服务配置错误")
-    try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(
-                "https://api.deepseek.com/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {Mykey}",
-                    "Content-Type": "application/json",
-                },
-                json={
-                    "model": "deepseek-chat",
-                    "messages": [{"role": "user", "content": data.message}],
-                },
-            )
-    except httpx.TimeoutException:
-        print("[DeepSeek error] 请求超时")
-        raise HTTPException(504, "模型服务响应超时")
-
-    except httpx.RequestError as e:
-        print(f"[DeepSeek error] 网络错误：{e}")
-        raise HTTPException(502, "无法连接模型服务")
-    if response.status_code != 200:
-        print(f"[Deepseek error]{response.status_code}{response.text}")
-        raise HTTPException(502, "模型服务暂时不可用")
-    try:
-        result = response.json()
-        reply = result["choices"][0]["message"]["content"]
-    except (KeyError, IndexError, ValueError):
-        print(f"[DeepSeek error] 返回结构异常：{response.text}")
-        raise HTTPException(502, "模型返回数据异常")
-    return {"reply": reply}
-
-
 @app.get("/api/post", response_model=list[PostOut])
 def get_posts():
     with SessionLocal() as session:
@@ -237,7 +221,9 @@ def create_post(data: PostCreat, current_user: User = Depends(get_current_user))
 @app.get("/api/post/{post_id}")
 def get_post(post_id: int):
     with SessionLocal() as session:
-        post = session.get(Post, post_id)
+        post = session.scalars(
+            select(Post).where(Post.id == post_id, Post.status == "published")
+        ).first()
         if not post:
             raise HTTPException(404, "文章不存在")
         return {
@@ -264,6 +250,8 @@ def delete_post(post_id: int, current_user: User = Depends(get_current_user)):
 
 @app.post("/api/register", status_code=201)
 def register(data: UserRegister):
+    if not ALLOW_REGISTER:
+        raise HTTPException(404, "注册已关闭")
     with SessionLocal() as session:
         existing_user = session.scalars(
             select(User).where(User.username == data.username)
@@ -354,9 +342,11 @@ async def chat_stream(
     hits = await asyncio.to_thread(rag_search, data.message, 3)
     # 存储地址
     citations = []
+    # 定义上下文变量
+    context_text = ""
     # 拼接查到的资料
     if hits:
-        context_text = "下面是作者自己的笔记，请参考这些内容回答问题：\n\n"
+        context_text = "【参考资料】下面是作者自己的笔记（可能相关，也可能不完全相关），请参考这些内容回答问题：\n\n"
         seen_urls = set()  # 用来去重
         for h in hits:
             source = h["meta"].get("source", "未知来源")
@@ -372,10 +362,11 @@ async def chat_stream(
                 # 每块截断 600 字防止超限
             context_text += f"【来自：{source}-{heading}】\n{h['doc'][:1200]}\n\n"
     # 组装给上游的格式
+    system_content = BASE_PROMPT + ("\n\n" + context_text if context_text else "")
     messages_for_deepseek = [
         {
             "role": "system",
-            "content": f"你是一个专属博客助手。如果用户的问题能在参考资料中找到，请依据资料回答；如果资料里没有，请如实说你不知道，不要瞎编。\n\n{context_text}",
+            "content": system_content,
         }
     ]
     # 把历史聊天记录追加到后面
