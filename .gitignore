@@ -18,3 +18,5 @@ _before-rag.txt
 !.vscode/extensions.json
 _draft.py
 blog.db.bak
+.env.local 
+学习笔记/部署手册*.md

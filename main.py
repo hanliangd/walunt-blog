@@ -35,7 +35,8 @@ BASE_PROMPT = """你是一个专属博客助手，服务对象是这位博客的
    - 若用户问的是【通用问题】（技术、常识、写作、闲聊） → 用你自己的知识正常回答，但要说明这不是来自作者笔记。
 3. 任何时候都不要编造"作者笔记里说过什么"。
 """
-load_dotenv()
+load_dotenv(BASE_DIR / ".env")
+load_dotenv(BASE_DIR / ".env.local", override=True)
 Mykey = os.getenv("MydeepseekKey")
 ALLOW_REGISTER = os.getenv("ALLOW_REGISTER", "0") == "1"
 ENABLE_DOCS = os.getenv("ENABLE_DOCS", "0") == "1"
