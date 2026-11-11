@@ -1,243 +1,77 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>我的AI助手</title>
-  <link rel="stylesheet" href="./notes/note.css">
-  <style>
-  *{
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-  body{
-    height: 100vh;
-    overflow: hidden;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  }
-  /* 美化滚动条 */
-  ::-webkit-scrollbar {
-    width: 8px;
-  }
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  ::-webkit-scrollbar-thumb {
-    background: #cbd5e0;
-    border-radius: 3px;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: #a0aec0;
-  }
-  .app-container{
-    display: flex;
-    height: 100%;
-  }
-  .sidebar{
-    width: 260px;
-    min-width: 200px;    /* 最小不能小于 200px */
-    max-width: 30%; 
-    background: #f7f8fa;
-    border-right: 1px solid #e5e7eb;
-    display: flex;
-    flex-direction: column;
-    padding: 16px 12px;
-    gap: 12px;
-  }
-  .new-chat-btn{
-    width: 100%;
-    padding: 10px;
-    background: #667eea;
-    color: #ffffff;
-    border: none;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-  .new-chat-btn:hover{
-    background: #5568d3;
-  }
-  .conversation-list{
-    flex: 1;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-  .conversation-item{
-    padding: 10px 12px;
-    border-radius: 6px;
-    font-size: 14px;
-    color: #333;
-    cursor: pointer;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .conversation-item:hover{
-    background: #e8ebf0;
-  }
-  .conversation-item.active{
-    background: #667eea;
-    color: #ffffff;
-    font-weight: 600;
-  }
-  /* 闪烁光标 */
-  .cursor {
-    display: inline-block;
-    width: 2px;           /* 👈 控制粗细 */
-    height: 1em;          /* 👈 和文字一样高 */
-    background: #667eea;  /* 👈 和你的主题色一致 */
-    margin-left: 2px;     /* 👈 和文字保持一点距离 */
-    vertical-align: text-bottom;  /* 👈 和文字对齐 */
-    animation: blink 1s step-end infinite;
-  }
-
-  @keyframes blink {
-    50% { opacity: 0; }
-  }
-  .chat-container{
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    background: #ffffff;
-  }
-  .chat-header{
-    padding: 16px 20px;
-    background: #667eea;
-    color: #ffffff;
-    font-weight: 600;
-    font-size: 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  #userInfo {
-    font-size: 14px;
-    font-weight: 400;
-    opacity: 0.9;
-  }
-  #out{
-    flex: 1;
-    padding: 20px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-  #out > div {
-    max-width: 80%;
-    padding: 10px 14px;
-    border-radius: 12px;
-    line-height: 1.5;
-    font-size: 15px;
-    word-wrap: break-word;
-    white-space: normal;
-  }
-  #out >div.user{
-    align-self: flex-end;
-    background: #667eea;
-    color: #ffffff;
-    border-bottom-right-radius: 4px;
-    white-space: pre-wrap;
-  }
-  #out >div.ai{
-    align-self: flex-start;
-    background: #f0f2f5;
-    color: #333333;
-    border-bottom-left-radius: 4px;
-  }
-  /* AI 回答里的标题降级：气泡里不适合 22px 大标题 */
-  .ai.note-body { white-space: normal; line-height: 1.7; }      /* ← 关键 */
-  .ai.note-body p { margin: 6px 0; }
-  .ai.note-body h1, .ai.note-body h2 { font-size: 1.1em; margin: 14px 0 6px; border-bottom: none; }
-  .ai.note-body h3 { font-size: 1.02em; margin: 10px 0 4px; }
-  .ai.note-body ul, .ai.note-body ol { padding-left: 1.4em; margin: 6px 0; }
-  .citations-area {
-    margin-top: 10px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-.citation-badge {
-    display: inline-block;
-    padding: 4px 10px;
-    background: #f0f4ff;
-    color: #4f46e5;
-    border: 1px solid #c7d2fe;
-    border-radius: 12px;
-    font-size: 12px;
-    text-decoration: none;
-    transition: all 0.2s;
-}
-.citation-badge:hover {
-    background: #e0e7ff;
-    transform: translateY(-1px);
-}
-  .input-area{
-    display: flex;
-    padding: 12px 16px;
-    border-top: 1px solid #e5e7eb;
-    gap: 10px;
-    background: #ffffff;
-  }
-  #msg {
-    flex: 1;
-    padding: 10px 16px;
-    border: 1px solid #d1d5db;
-    border-radius: 24px;
-    outline: none;
-    font-size: 15px;
-    transition: border-color 0.2s;
-  }
-  #msg:focus {
-    border-color: #667eea;
-  }
-  #sent {
-    padding: 10px 24px;
-    background: #667eea;
-    color: #ffffff;
-    border: none;
-    border-radius: 24px;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s, transform 0.2s;
-  }
-  #sent:hover {
-    background: #5568d3;
-    transform: scale(1.02);
-  }
-
-  #sent:active {
-    transform: scale(0.98);
-  }
-  </style>
-</head>
-<body>
-  <div class="app-container">
-    <!-- 侧边栏 -->
-    <aside class="sidebar">
-    <button id="newChatBtn" class="new-chat-btn">+ 开启新对话</button>
-    <div id="conversationList" class="conversation-list"></div>
-    </aside>
-    <!-- 主聊天区域 -->
-    <main class="chat-container">
-      <div class="chat-header">
-        <span>我的 AI 助手</span>
-        <span id="userInfo">加载中...</span>
-      </div>
-      <div id="out"></div>
-      <div class="input-area">
-        <input type="text" id="msg" placeholder="说点什么呢……">
-        <button id="sent">发送</button>
-      </div>
-    </main>
-  </div>
-  <script type="module" src="./chat-ui.js?v=20261028"></script>
-  <script src="./vendor/marked.min.js"></script>
-  <script src="./vendor/purify.min.js"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>我的AI助手</title>
+    <link rel="stylesheet" href="./notes/note.css" />
+    <link rel="stylesheet" href="./chat.css?v=20261110-2" />
+  </head>
+  <body>
+    <div class="bg-layer" aria-hidden="true"></div>
+    <div class="app-container">
+      <!-- 侧边栏 -->
+      <aside id="sidebarPanel" class="sidebar">
+        <div class="sidebar-toolbar">
+          <button id="newChatBtn" class="new-chat-btn">＋ 新会话</button>
+          <button
+            id="collapseSidebarBtn"
+            class="sidebar-icon-btn"
+            type="button"
+            aria-label="收起侧边栏"
+            aria-controls="sidebarPanel"
+            aria-expanded="true"
+            title="收起侧边栏"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="3.5" y="4.5" width="17" height="15" rx="2.5"></rect>
+              <path d="M9 5v14M15 9l-3 3 3 3"></path>
+            </svg>
+          </button>
+        </div>
+        <div id="conversationList" class="conversation-list"></div>
+      </aside>
+      <!-- 主聊天区域 -->
+      <main class="chat-container">
+        <div class="chat-header">
+          <button
+            id="expandSidebarBtn"
+            class="sidebar-icon-btn"
+            type="button"
+            aria-label="展开侧边栏"
+            aria-controls="sidebarPanel"
+            aria-expanded="true"
+            title="展开侧边栏"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="3.5" y="4.5" width="17" height="15" rx="2.5"></rect>
+              <path d="M9 5v14m3-7h5m-2-3 3 3-3 3"></path>
+            </svg>
+          </button>
+          <span id="currentConversationTitle" class="chat-title">新会话</span>
+          <button type="button" class="theme-toggle" data-theme-toggle aria-label="切换主题" title="切换主题">
+            <svg class="theme-icon theme-icon--moon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M20.2 15.3A8.5 8.5 0 0 1 8.7 3.8 8.5 8.5 0 1 0 20.2 15.3Z"></path>
+            </svg>
+            <svg class="theme-icon theme-icon--sun" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="3.7"></circle>
+              <path d="M12 2v2.2M12 19.8V22M4.93 4.93l1.56 1.56m11.02 11.02 1.56 1.56M2 12h2.2m15.6 0H22M4.93 19.07l-1.56 1.56M17.51 6.49l1.56-1.56"></path>
+            </svg>
+          </button>
+          <span id="userInfo">加载中...</span>
+        </div>
+        <div id="out"></div>
+        <div class="input-area">
+          <div class="composer-shell">
+            <input type="text" id="msg" placeholder="说点什么呢……" />
+            <button id="sent">发送</button>
+          </div>
+        </div>
+      </main>
+    </div>
+    <script type="module" src="./chat-ui.js?v=20261110-4"></script>
+    <script src="./theme-toggle.js"></script>
+    <script src="./vendor/marked.min.js"></script>
+    <script src="./vendor/purify.min.js"></script>
+  </body>
 </html>

@@ -3,8 +3,31 @@ const outDiv = document.getElementById('out')
 const msgInput = document.getElementById('msg')
 const sendBtn = document.getElementById('sent')
 const newConvBtn = document.getElementById('newChatBtn')
+const appContainer = document.querySelector('.app-container')
+const sidebar = document.querySelector('.sidebar')
+const collapseSidebarBtn = document.getElementById('collapseSidebarBtn')
+const expandSidebarBtn = document.getElementById('expandSidebarBtn')
 let busy = false
 let currentConversationId = null
+let conversationCache = []
+const currentTitleEl = document.getElementById('currentConversationTitle')
+
+function updateCurrentConversationTitle() {
+  const current = conversationCache.find(conversation => String(conversation.id) === String(currentConversationId))
+  currentTitleEl.textContent = current?.title || '新会话'
+}
+
+function setSidebarCollapsed(collapsed) {
+  appContainer.classList.toggle('sidebar-collapsed', collapsed)
+  sidebar.inert = collapsed
+  sidebar.setAttribute('aria-hidden', String(collapsed))
+  collapseSidebarBtn.setAttribute('aria-expanded', String(!collapsed))
+  expandSidebarBtn.setAttribute('aria-expanded', String(!collapsed))
+}
+
+collapseSidebarBtn.addEventListener('click', () => setSidebarCollapsed(true))
+expandSidebarBtn.addEventListener('click', () => setSidebarCollapsed(false))
+
 // 渲染会话列表
   function renderConversationList(conversations) {
     const conversationListDiv = document.getElementById('conversationList');
@@ -12,6 +35,8 @@ let currentConversationId = null
       ...conversations.map(conversation => {
         const div = document.createElement('div');
         div.className = 'conversation-item';
+        div.dataset.conversationId = conversation.id;
+        div.classList.toggle('active', String(conversation.id) === String(currentConversationId));
         div.textContent = conversation.title;
         div.onclick = () => switchConversation(conversation.id);
         return div;
@@ -26,7 +51,9 @@ async function fetchConversations() {
       throw new Error(`HTTP error! status: ${res.status}`);
     }
     const conversations = await res.json();
+    conversationCache = conversations
     renderConversationList(conversations);
+    updateCurrentConversationTitle()
     return conversations;
   } catch (e) {
     console.error('Failed to fetch conversations:', e);
@@ -50,6 +77,10 @@ function renderCitations(container, cites) {
 // 切换会话并刷新历史
 async function switchConversation(conversationId) {
   currentConversationId = conversationId;
+  document.querySelectorAll('.conversation-item').forEach(item => {
+    item.classList.toggle('active', item.dataset.conversationId === String(conversationId));
+  });
+  updateCurrentConversationTitle()
   try {
     const res = await fetch(`/api/conversations/${conversationId}/messages`);
     if (!res.ok) {
@@ -205,7 +236,7 @@ async function init() {
     const res = await fetch("/api/me")
     if(res.ok){
      const user = await res.json()
-     document.getElementById('userInfo').textContent = `👤 ${user.username}`
+     document.getElementById('userInfo').textContent = user.username
     }else{
       location.href = '/static/login.html?next=' + encodeURIComponent('/static/chat.html')
     }
