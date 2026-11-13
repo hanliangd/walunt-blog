@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>我的AI助手</title>
     <link rel="stylesheet" href="./notes/note.css" />
-    <link rel="stylesheet" href="./chat.css?v=20261110-2" />
+    <link rel="stylesheet" href="./chat.css?v=20261113-2" />
   </head>
   <body>
     <div class="bg-layer" aria-hidden="true"></div>
@@ -31,6 +31,8 @@
         </div>
         <div id="conversationList" class="conversation-list"></div>
       </aside>
+      <!-- 窄屏抽屉遮罩：桌面端 display:none，不参与布局 -->
+      <div class="sidebar-scrim" id="sidebarScrim" aria-hidden="true"></div>
       <!-- 主聊天区域 -->
       <main class="chat-container">
         <div class="chat-header">
@@ -69,7 +71,7 @@
         </div>
       </main>
     </div>
-    <script type="module" src="./chat-ui.js?v=20261110-4"></script>
+    <script type="module" src="./chat-ui.js?v=20261113-1"></script>
     <script src="./theme-toggle.js"></script>
     <script src="./vendor/marked.min.js"></script>
     <script src="./vendor/purify.min.js"></script>

@@ -762,7 +762,7 @@ header .picture li > div .picture-dot.is-on { /* 当前这张：高度更低的�
    所以这整段动画已删除（想退回纯 CSS 轮播，从 git 历史里把这段捞回来即可）。 */
 @media (max-width: 768px) {
   body {
-    overflow-x: visible;
+    overflow-x: hidden;
   }
   /* 2. 强制让所有 1080px 的容器宽度，变成 100% 自适应 */
   header .head,
@@ -775,13 +775,27 @@ header .picture li > div .picture-dot.is-on { /* 当前这张：高度更低的�
     padding-right: 15px;
     box-sizing: border-box;
   }
+  /* 顶栏拆成两行：logo 一行、导航一行。
+     原来两者挤在同一行，logo 占 50%、导航被压到 8px，手机上读不出来。 */
   header .head {
-    padding-left: 12px; /* 把 300px 改成 15px */
-    padding-right: 12px;
+    position: static;
+    flex-direction: column;
+    align-items: stretch;
+    height: auto;
+    gap: 8px;
+    padding: 10px 15px 8px;
   }
-  header .head a {
-    width: 50%; /* 去掉原来写死的 250px 宽度 */
-    font-size: 10px; /* 字号稍微调小一点 */
+  header .head a.logo {
+    width: 100%;
+    height: auto;
+    font-size: 18px;
+    line-height: 1.5;
+    text-align: left;
+  }
+  /* 顶栏在手机上不固定，render.js 的滚动隐藏位移要关掉，
+     否则静态布局里被 translateY(-100%) 推走会留下一块空白 */
+  header .head.hidden {
+    transform: none;
   }
   header .box {
     width: 100%;
@@ -801,29 +815,81 @@ header .picture li > div .picture-dot.is-on { /* 当前这张：高度更低的�
   }
   header nav input {
     width: 100%;
-    height: auto; /* 搜索框自适应 */
-    padding-left: 40px; /* 调整左边距 */
+    height: 48px;
+    /* ≥16px：iOS Safari 聚焦小于 16px 的输入框会自动放大整页 */
+    font-size: 16px;
+    padding-left: 44px;
     padding-right: 15px;
     box-sizing: border-box;
   }
   header nav span {
     position: absolute;
-    left: 14px;
-    font-size: 16px; /* 把现在那条 font-size:2px 删掉，那是白写的 */
+    top: 50%;
+    left: 30px;
+    transform: translateY(-50%);
+    font-size: 18px;
   }
+  /* 导航：独立一行，横向滑动。每项做成胶囊，字号回到可读的 13px，
+     点击区 ≥36px；overflow-x 只发生在这一行内，不会把整页撑宽。 */
   header .nav {
     width: 100%;
     height: auto;
-    line-height: 40px; /* 减小行高 */
     display: flex;
-    flex-wrap: nowrap; /* 强制不换行 */
-    justify-content: flex-end; /* 靠左对齐 */
-    overflow-x: auto; /* 如果放不下，允许内部横向滚动 */
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    gap: 8px;
+    padding-bottom: 4px;
+    line-height: 1;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color2-bule) transparent;
+  }
+  header .nav::-webkit-scrollbar {
+    height: 4px;
+  }
+  header .nav::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  header .nav::-webkit-scrollbar-thumb {
+    border-radius: var(--radius-pill);
+    background: var(--color2-bule);
+    opacity: 0.55;
   }
   header .nav a {
-    margin-left: 2px; /* 把电脑端的 23px 缩小 */
-    font-size: 8px; /* 把字号从 14px 缩小 */
-    white-space: nowrap; /* 文字本身不换行 */
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    height: auto;
+    min-height: 36px;
+    margin-left: 0;
+    padding: 9px 14px;
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-pill);
+    background: var(--bg-white-04);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+    scroll-snap-align: start;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+  /* 当前页（render.js 会给第一项上蓝色）：底色加重一点，滑动时看得出选中 */
+  header .nav a:first-child {
+    border-color: var(--color2-bule);
+    background: var(--bg-white-05);
+    box-shadow: var(--shadow-light);
+  }
+  /* render.js 给第一项写的是内联 color:var(--color-bule)，而 --color-bule 在深色模式下
+     没有重新定义（仍是 L38% 的深蓝），配上这里的深色胶囊底会读不出来。
+     内联样式压不过，但自定义属性靠继承生效：只在 nav 这一层把令牌调亮，不动 base 和 JS */
+  [data-theme="dark"] header .nav {
+    --color-bule: lab(78% 20 -45);
   }
   header .box .content1,
   header .box .content2 {
@@ -860,12 +926,14 @@ header .picture li > div .picture-dot.is-on { /* 当前这张：高度更低的�
   header .box .content1 .column1 .profile h2 {
     font-size: 22px;
   }
-  header .box .content1 .column2 .count a:first-child span:first-child {
-    font-size: 18px;
+  /* 三个统计数字统一字号。基础规则写的是 a:first-child / a:nth-child(2) / a:nth-child(3)，
+     多一个伪类权重更高，所以这里用 :nth-child(n) 匹配全部三项才压得过它们 */
+  header .box .content1 .column2 .count a:nth-child(n) span:first-child {
+    font-size: 20px;
   }
-  header .head {
-    position: static;
-  } /* 手机上不要固定头，65px 的账就不用算了 */
+  header .box .content1 .column2 .count a span:last-child {
+    font-size: 12px;
+  }
   header .box .content1 .column2 {
     flex-wrap: wrap; /* 允许换行，531 就有地方去 */
     height: auto;
@@ -903,6 +971,48 @@ header .picture li > div .picture-dot.is-on { /* 当前这张：高度更低的�
   }
   header .picture li div {
     height: 200px;
+  }
+  /* 六个社交图标：均分整行，但每格保底 44px 见方（触屏最小点击区），
+     图标字号跟着格子走，不再固定 20px 显得偏小 */
+  header .box .content1 .column2 .login a {
+    min-width: 44px;
+    height: 44px;
+    line-height: 44px;
+  }
+  header .box .content1 .column2 .login a span {
+    font-size: clamp(18px, 5.2vw, 22px);
+  }
+  /* 简介文字：桌面端没设字号，继承 body 的 16px，在 56px 头像旁会挤成三行 */
+  header .box .content1 .column1 .profile p {
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  /* 播放器卡：封面与控件各缩一号，整卡在窄屏不再超高 */
+  header .box .content2 .song {
+    height: auto;
+    gap: 14px;
+  }
+  header .box .content2 .song img {
+    width: 64px;
+    height: 64px;
+    flex: 0 0 64px;
+  }
+  header .box .content2 .song .media-name h2 {
+    font-size: 18px;
+  }
+  header .box .content2 .control {
+    height: 64px;
+    gap: 18px;
+  }
+  header .box .content2 .control div {
+    width: 44px;
+    height: 44px;
+  }
+  /*  motto 横条：80px 定高在手机上太空，字号也偏大 */
+  header .subject {
+    height: 60px;
+    line-height: 60px;
+    font-size: 17px;
   }
 }
 /* ≤480：这才是这个页面真正需要的"第二个断点" */
@@ -1068,6 +1178,35 @@ header .picture li > div .picture-dot.is-on { /* 当前这张：高度更低的�
   .status-bar__main {
     padding: 0 24px;
     font-size: 14px;
+  }
+}
+/* 状态条的窄屏覆盖必须放在上面这些基础规则之后：
+   .chip / .status-bar__* 都是单类选择器，权重相同，写在前面会被后面的基础值盖掉。 */
+@media (max-width: 768px) {
+  header .status-bar {
+    width: calc(100% - 30px);   /* 与 .box / .picture 的 15px 左右留白对齐 */
+  }
+  .status-bar__clock {
+    padding: 12px 16px;
+    font-size: 20px;
+  }
+  .status-bar__main {
+    padding: 12px 14px;
+    gap: 10px;
+    font-size: 12px;
+  }
+  /* 四个徽章原来一行硬排，390px 下会溢出卡片 */
+  .status-bar__stack {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .chip {
+    padding: 3px 7px;
+    font-size: 11px;
+  }
+  .chip i {
+    width: 10px;
+    height: 10px;
   }
 }
 @media (prefers-reduced-motion: reduce) {

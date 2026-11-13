@@ -68,6 +68,9 @@ body {
 }
 .chat-container {
   flex: 1;
+  /* flex 子项默认 min-width:auto，会被内部 Markdown 表格/代码块的最小内容宽度撑破，
+     导致整页横向溢出；这里显式允许收缩，溢出交给气泡内部滚动处理 */
+  min-width: 0;
   display: flex;
   flex-direction: column;
   background: rgba(194, 181, 232, 0.12);
@@ -340,6 +343,8 @@ body {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 8px 20px rgba(63, 74, 125, 0.1);
 }
 #out .ai .note-body pre code { background: transparent; color: inherit; }
+/* 长串英文/URL 允许在任意字符处断行，避免把气泡撑破 */
+#out .ai .note-body { min-width: 0; overflow-wrap: anywhere; }
 
 /* 引用来源标签 */
 .citations-area {
@@ -588,3 +593,204 @@ body {
 [data-theme="dark"] #sent:hover { background: rgba(131, 143, 214, 0.7); }
 [data-theme="dark"] ::-webkit-scrollbar-thumb { background: rgba(190, 195, 230, 0.3); }
 [data-theme="dark"] ::-webkit-scrollbar-thumb:hover { background: rgba(205, 210, 242, 0.46); }
+
+/* 抽屉遮罩：仅窄屏启用，桌面端始终不参与布局 */
+.sidebar-scrim { display: none; }
+
+/* =========================================================
+   表格横向滚动（≤1080px）
+   ---------------------------------------------------------
+   note.css 给 .note-body table 设了 min-width:560px，横向滚动本来靠
+   note.js 包出来的 .note-table 外层承担；聊天页直接用 marked.parse，
+   没有那层包裹，所以表格会按 560px 撑破气泡。
+   这里让 table 自己当滚动容器：table 默认 display:table，overflow 不生效，
+   必须转成块级；min-width 也要解除，否则 max-width:100% 压不住它。
+   气泡装得下 560px 表格大约需要 1046px 视口（侧栏 260 + 内边距 + 80% 气泡），
+   所以阈值取 1080px，更宽的桌面端保持原有表格排版不变。
+   ========================================================= */
+@media (max-width: 1080px) {
+  #out .ai .note-body pre,
+  #out .ai .note-body table {
+    display: block;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: var(--chat-accent) transparent;
+  }
+  #out .ai .note-body pre::-webkit-scrollbar,
+  #out .ai .note-body table::-webkit-scrollbar { height: 6px; }
+  #out .ai .note-body pre::-webkit-scrollbar-track,
+  #out .ai .note-body table::-webkit-scrollbar-track { background: transparent; }
+  #out .ai .note-body pre::-webkit-scrollbar-thumb,
+  #out .ai .note-body table::-webkit-scrollbar-thumb {
+    border-radius: var(--chat-radius-pill);
+    background: var(--chat-accent);
+    opacity: 0.5;
+  }
+}
+
+/* =========================================================
+   移动端（≤768px）
+   ---------------------------------------------------------
+   桌面端侧栏是 flex 兄弟，占 260px；手机上那样会把聊天区压到不足 130px。
+   这里改成覆盖式抽屉：侧栏脱离 flex 流、固定在左侧，收起时平移出屏幕，
+   展开时铺一层遮罩，点遮罩 / 选会话 / Esc 都能收回。
+   展开与收起复用原有的 #expandSidebarBtn / #collapseSidebarBtn 和
+   .sidebar-collapsed 状态，不新增第二套开关逻辑。
+   ========================================================= */
+@media (max-width: 768px) {
+  /* dvh：移动浏览器地址栏伸缩时，100vh 会把输入区顶出可视区 */
+  body { height: 100dvh; }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 30;
+    flex: 0 0 auto;
+    width: min(84vw, 300px);
+    min-width: 0;
+    max-width: 84vw;
+    padding: 14px 12px;
+    border-right: 1px solid var(--chat-glass-line);
+    box-shadow: 0 0 40px rgba(28, 24, 56, 0.3);
+    transform: translateX(0);
+    transition: transform 0.28s ease;
+  }
+  /* 覆盖桌面端那套「宽度归零」的收起方式：抽屉靠平移隐藏，宽度保持不变，
+     否则收起动画会先把内容挤扁再消失 */
+  .app-container.sidebar-collapsed .sidebar {
+    flex-basis: auto;
+    width: min(84vw, 300px);
+    min-width: 0;
+    max-width: 84vw;
+    padding: 14px 12px;
+    border-right-width: 1px;
+    opacity: 1;
+    transform: translateX(-102%);
+  }
+  .sidebar-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    display: block;
+    background: rgba(22, 19, 42, 0.44);
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.24s ease;
+  }
+  .app-container:not(.sidebar-collapsed) .sidebar-scrim {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  [data-theme="dark"] .sidebar-scrim { background: rgba(8, 7, 20, 0.6); }
+
+  /* 顶栏：四个元素在 390px 下要能同时放下，标题吃掉剩余空间并截断 */
+  .chat-header {
+    gap: 8px;
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+  .chat-header #currentConversationTitle {
+    flex: 1;
+    min-width: 0;
+    margin-right: 0;
+  }
+  .chat-title {
+    max-width: none;
+    padding: 7px 12px;
+    font-size: 13px;
+  }
+  #userInfo {
+    max-width: 92px;
+    padding: 7px 10px;
+    overflow: hidden;
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .theme-toggle,
+  .sidebar-icon-btn {
+    flex: 0 0 36px;
+    width: 36px;
+    height: 36px;
+  }
+  .theme-toggle .theme-icon,
+  .sidebar-icon-btn svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  /* 消息区：气泡放宽到 92%，否则手机上每行只剩十几个字 */
+  #out {
+    gap: 10px;
+    padding: 14px 12px;
+    overscroll-behavior-y: contain;
+  }
+  #out > div {
+    max-width: 92%;
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+  /* 输入区： safe-area 兜住 iPhone 底部横条 */
+  .input-area {
+    padding: 12px 12px calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+  .composer-shell {
+    gap: 6px;
+    padding: 6px;
+    border-radius: 18px;
+  }
+  #msg {
+    height: 44px;
+    /* ≥16px：iOS 聚焦更小的输入框会自动放大整页 */
+    font-size: 16px;
+  }
+  #sent {
+    min-width: 62px;
+    height: 44px;
+    padding: 0 14px;
+    border-radius: 14px;
+    font-size: 14px;
+  }
+
+  /* 抽屉里的会话项：点击区加大，滚动条沿用本页配色 */
+  .conversation-item {
+    padding: 12px;
+    font-size: 15px;
+  }
+  .conversation-list {
+    overscroll-behavior-y: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--chat-accent) transparent;
+  }
+  .conversation-list::-webkit-scrollbar { width: 5px; }
+  .conversation-list::-webkit-scrollbar-thumb {
+    border-radius: 3px;
+    background: var(--chat-accent);
+    opacity: 0.5;
+  }
+}
+
+/* 更窄的屏幕：用户名胶囊让位给标题，避免顶栏挤成两行 */
+@media (max-width: 400px) {
+  #userInfo { display: none; }
+  .chat-title { font-size: 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar,
+  .sidebar-scrim,
+  .conversation-item,
+  .theme-toggle,
+  .sidebar-icon-btn,
+  #sent {
+    transition: none;
+  }
+  .cursor { animation: none; }
+}

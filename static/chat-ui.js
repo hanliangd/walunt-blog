@@ -7,6 +7,8 @@ const appContainer = document.querySelector('.app-container')
 const sidebar = document.querySelector('.sidebar')
 const collapseSidebarBtn = document.getElementById('collapseSidebarBtn')
 const expandSidebarBtn = document.getElementById('expandSidebarBtn')
+const sidebarScrim = document.getElementById('sidebarScrim')
+const narrowScreen = window.matchMedia('(max-width: 768px)')
 let busy = false
 let currentConversationId = null
 let conversationCache = []
@@ -28,6 +30,17 @@ function setSidebarCollapsed(collapsed) {
 collapseSidebarBtn.addEventListener('click', () => setSidebarCollapsed(true))
 expandSidebarBtn.addEventListener('click', () => setSidebarCollapsed(false))
 
+// 窄屏抽屉：点遮罩 / Esc 收回；跨过断点时同步开合状态
+sidebarScrim.addEventListener('click', () => setSidebarCollapsed(true))
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && narrowScreen.matches && !appContainer.classList.contains('sidebar-collapsed')) {
+    setSidebarCollapsed(true)
+  }
+})
+narrowScreen.addEventListener('change', (event) => setSidebarCollapsed(event.matches))
+// 手机上一进页面就收起，否则抽屉会盖住整个聊天区
+if (narrowScreen.matches) setSidebarCollapsed(true)
+
 // 渲染会话列表
   function renderConversationList(conversations) {
     const conversationListDiv = document.getElementById('conversationList');
@@ -38,7 +51,11 @@ expandSidebarBtn.addEventListener('click', () => setSidebarCollapsed(false))
         div.dataset.conversationId = conversation.id;
         div.classList.toggle('active', String(conversation.id) === String(currentConversationId));
         div.textContent = conversation.title;
-        div.onclick = () => switchConversation(conversation.id);
+        div.onclick = () => {
+          switchConversation(conversation.id);
+          // 窄屏选完会话就收回抽屉，直接露出消息区
+          if (narrowScreen.matches) setSidebarCollapsed(true)
+        };
         return div;
       })
     ); 
@@ -133,7 +150,10 @@ async function createNewConversation() {
     console.error('Failed to create new conversation:', e);
   }
 }
-newConvBtn.addEventListener('click', createNewConversation);
+newConvBtn.addEventListener('click', async () => {
+  await createNewConversation();
+  if (narrowScreen.matches) setSidebarCollapsed(true)
+});
 sendBtn.addEventListener('click', async ()=>{
   if (busy) return
   busy = true
