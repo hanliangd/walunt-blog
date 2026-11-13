@@ -360,7 +360,7 @@ async def chat_stream(
                 clean_title = source.replace("notes/", "").replace("post:", "")
                 citations.append({"title": clean_title, "url": url})
                 seen_urls.add(url)
-                # 每块截断 600 字防止超限
+                # 每块截断 1200 字防止超限
             context_text += f"【来自：{source}-{heading}】\n{h['doc'][:1200]}\n\n"
     # 组装给上游的格式
     system_content = BASE_PROMPT + ("\n\n" + context_text if context_text else "")
