@@ -246,8 +246,8 @@ sendBtn.addEventListener("click", async () => {
       },
       onError: (e) => {
         if (cursor) cursor.remove();
-        textSpan.textContent += `\n[错误] ${e}`;
-        if (String(e).includes("401")) {
+        textSpan.textContent += `\n[错误] ${e?.message ?? e}`;
+        if (e?.status === 401) {
           setTimeout(() => {
             location.href =
               "/static/login.html?next=" +

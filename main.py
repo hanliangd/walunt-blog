@@ -198,7 +198,7 @@ def get_posts():
                 "title": p.title,
                 "author": p.author.username,
                 "content": p.content,
-                "created_at": p.created_at,
+                "created_at": p.created_at.strftime("%Y-%m-%d %H:%M:%S"),
             }
             for p in posts
         ]
@@ -232,7 +232,7 @@ def get_post(post_id: int):
             "title": post.title,
             "content": post.content,
             "author": post.author.username,
-            "created_at": post.created_at,
+            "created_at": post.created_at.strftime("%Y-%m-%d %H:%M:%S"),
         }
 
 
@@ -281,7 +281,7 @@ def login(data: UserLogin, response: Response):
         if not user or not verify_password(data.password, user.password_hash):
             raise HTTPException(status_code=401, detail="用户名或密码错误")
         token = secrets.token_urlsafe(32)
-        expires_at = (datetime.now() + timedelta(days=7)).isoformat()
+        expires_at = datetime.now() + timedelta(days=7)
         new_session = SessionToken(token=token, user_id=user.id, expires_at=expires_at)
         session.add(new_session)
         session.commit()

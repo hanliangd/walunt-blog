@@ -25,7 +25,9 @@ class User(Base):
     password_hash: Mapped[str]
     avatar: Mapped[str | None]
     bio: Mapped[str | None]
-    created_at: Mapped[str] = mapped_column(server_default=func.current_timestamp())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=func.current_timestamp()
+    )
     posts: Mapped[list["Post"]] = relationship(back_populates="author")
 
 
@@ -38,7 +40,9 @@ class Post(Base):
     status: Mapped[str] = mapped_column(server_default="draft")
     likes: Mapped[int] = mapped_column(server_default=text("0"))
     views: Mapped[int] = mapped_column(server_default=text("0"))
-    created_at: Mapped[str] = mapped_column(server_default=func.current_timestamp())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=func.current_timestamp()
+    )
     published_at: Mapped[str | None]
     __table_args__ = (CheckConstraint("likes >= 0", name="ck_likes_non_negative"),)
     author: Mapped["User"] = relationship(back_populates="posts")
@@ -60,8 +64,10 @@ class SessionToken(Base):
     __tablename__ = "sessions"
     token: Mapped[str] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    created_at: Mapped[str] = mapped_column(server_default=func.current_timestamp())
-    expires_at: Mapped[str]
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=func.current_timestamp()
+    )
+    expires_at: Mapped[datetime] = mapped_column(DateTime)
 
 
 class Message(Base):
